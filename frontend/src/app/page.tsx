@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { login } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
+import KnowlediaLogo from "@/components/KnowlediaLogo";
 
 export default function LandingPage() {
   const [email, setEmail] = useState("");
@@ -34,12 +35,7 @@ export default function LandingPage() {
       {/* Left — branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-brand-600 via-brand-700 to-indigo-800 text-white flex-col justify-between p-12">
         <div>
-          <div className="flex items-center gap-3">
-            <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
-            </svg>
-            <span className="text-2xl font-bold tracking-tight">Knowledia</span>
-          </div>
+          <KnowlediaLogo size="lg" variant="light" />
           <p className="mt-1 text-brand-200 text-sm">Corporate Knowledge Management</p>
         </div>
 
@@ -69,11 +65,8 @@ export default function LandingPage() {
       {/* Right — login form */}
       <div className="flex flex-1 items-center justify-center p-8">
         <div className="w-full max-w-sm">
-          <div className="lg:hidden flex items-center gap-2 mb-8 justify-center">
-            <svg className="h-7 w-7 text-brand-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
-            </svg>
-            <span className="text-xl font-bold text-brand-700">Knowledia</span>
+          <div className="lg:hidden flex items-center justify-center mb-8">
+            <KnowlediaLogo size="md" />
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-1">Welcome back</h2>

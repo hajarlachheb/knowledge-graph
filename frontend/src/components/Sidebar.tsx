@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
 import { getUnreadCount, markAllNotificationsRead, getNotifications, NotificationOut } from "@/lib/api";
+import KnowlediaLogo from "@/components/KnowlediaLogo";
 
 const NAV_SECTIONS = [
   {
@@ -111,55 +112,49 @@ export default function Sidebar() {
       }`}
     >
       {/* Logo + notifications */}
-      <div className="flex h-14 items-center justify-between px-4 shrink-0">
+      <div className="relative flex h-14 items-center justify-between px-4 shrink-0">
         <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white font-bold text-sm">
-            K
-          </span>
-          {!collapsed && (
-            <span className="font-semibold text-[15px] text-gray-900 tracking-tight truncate">
-              Knowledia
-            </span>
-          )}
+          <KnowlediaLogo iconOnly={collapsed} size="sm" className="truncate" />
         </Link>
         {!collapsed && (
-          <div className="relative">
-            <button onClick={toggleNotifs} className="relative p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-              </svg>
-              {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              )}
-            </button>
-            {showNotifs && (
-              <div className="absolute right-0 top-10 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100">
-                  <span className="text-sm font-semibold text-gray-900">Notifications</span>
-                  {unreadCount > 0 && (
-                    <button onClick={handleMarkAllRead} className="text-[11px] text-brand-600 hover:underline">
-                      Mark all read
-                    </button>
-                  )}
-                </div>
-                <div className="overflow-y-auto max-h-80">
-                  {notifs.length === 0 ? (
-                    <p className="px-4 py-6 text-sm text-gray-400 text-center">No notifications yet</p>
-                  ) : notifs.map((n) => (
-                    <div key={n.id} className={`px-4 py-2.5 border-b border-gray-50 hover:bg-gray-50 transition-colors ${!n.read ? "bg-brand-50/30" : ""}`}>
-                      <p className="text-[13px] text-gray-700">
-                        <span className="font-medium">{n.actor_name}</span> {n.message}
-                      </p>
-                      <p className="text-[11px] text-gray-400 mt-0.5">
-                        {new Date(n.created_at).toLocaleDateString()} &middot; {new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+          <button onClick={toggleNotifs} className="relative p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+            </svg>
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
             )}
+          </button>
+        )}
+        {/* Notification panel: opens to the right of the sidebar so it doesn't overlap nav */}
+        {showNotifs && !collapsed && (
+          <div className="absolute left-full top-0 ml-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-[100] overflow-hidden min-h-[120px] max-h-[70vh] flex flex-col">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 shrink-0">
+              <span className="text-sm font-semibold text-gray-900">Notifications</span>
+              {unreadCount > 0 && (
+                <button onClick={handleMarkAllRead} className="text-[11px] text-brand-600 hover:underline">
+                  Mark all read
+                </button>
+              )}
+            </div>
+            <div className="overflow-y-auto flex-1 min-h-0">
+              {notifs.length === 0 ? (
+                <p className="px-4 py-6 text-sm text-gray-400 text-center">No notifications yet</p>
+              ) : (
+                notifs.map((n) => (
+                  <div key={n.id} className={`px-4 py-2.5 border-b border-gray-50 last:border-b-0 hover:bg-gray-50/80 transition-colors ${!n.read ? "bg-brand-50/30" : ""}`}>
+                    <p className="text-[13px] text-gray-700">
+                      <span className="font-medium">{n.actor_name}</span> {n.message}
+                    </p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">
+                      {new Date(n.created_at).toLocaleDateString()} &middot; {new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         )}
       </div>
