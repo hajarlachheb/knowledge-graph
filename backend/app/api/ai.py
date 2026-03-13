@@ -164,27 +164,53 @@ async def ai_chat(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    """Conversational Q&A that synthesizes answers from the knowledge base."""
+    """RAG-powered conversational Q&A: retrieves relevant REX sheets then answers with Llama."""
     question = body.get("question", "").strip()
     if not question:
         return {"answer": "Please provide a question."}
 
+    # ── Retrieval: score ALL published REX sheets against the query ──────────
     keywords = _extract_keywords(question)
     result = await session.execute(_rex_query().where(RexSheet.status == "published"))
     all_rex = list(result.scalars().unique().all())
 
-    scored = [(rex, _score_rex(rex, keywords)) for rex in all_rex]
-    scored = [(r, s) for r, s in scored if s > 0]
-    scored.sort(key=lambda x: x[1], reverse=True)
+    if not keywords:
+        # No keywords — fall back to most-voted recent REX as context
+        all_rex_sorted = sorted(all_rex, key=lambda r: r.upvotes - r.downvotes, reverse=True)
+        top_rex = all_rex_sorted[:8]
+        scored_pairs = [(r, 1.0) for r in top_rex]
+    else:
+        scored_pairs = [(rex, _score_rex(rex, keywords)) for rex in all_rex]
+        scored_pairs = [(r, s) for r, s in scored_pairs if s > 0]
+        scored_pairs.sort(key=lambda x: x[1], reverse=True)
 
-    context = [
-        {"title": r.title, "problematic": r.problematic, "solution": r.solution}
-        for r, _ in scored[:5]
-    ]
+    # ── Build rich context documents for Llama ────────────────────────────────
+    context = []
+    for r, score in scored_pairs[:8]:
+        tags = ", ".join(t.name for t in (r.tags or [])) or "none"
+        dept = r.author.department.name if (r.author and r.author.department) else "unknown"
+        author_name = r.author.full_name or r.author.username if r.author else "unknown"
+        context.append({
+            "id": r.id,
+            "title": r.title,
+            "author": author_name,
+            "department": dept,
+            "category": r.category or "general",
+            "tags": tags,
+            "problematic": r.problematic,
+            "solution": r.solution,
+            "score": score,
+        })
 
+    # ── Generate answer with Llama ────────────────────────────────────────────
     llm = get_llm_provider()
     answer = await llm.chat(question, context)
-    rex_refs = [{"id": r.id, "title": r.title} for r, _ in scored[:3]]
+
+    # Return top-3 sources for the frontend to display
+    rex_refs = [
+        {"id": c["id"], "title": c["title"], "author": c["author"], "department": c["department"]}
+        for c in context[:3]
+    ]
     return {"answer": answer, "references": rex_refs}
 
 

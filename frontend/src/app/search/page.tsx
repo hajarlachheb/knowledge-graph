@@ -8,7 +8,7 @@ import RexCard from "@/components/LearningCard";
 interface ChatMessage {
   role: "user" | "assistant";
   text: string;
-  references?: { id: number; title: string }[];
+  references?: { id: number; title: string; author?: string; department?: string }[];
 }
 
 export default function SearchPage() {
@@ -100,7 +100,7 @@ export default function SearchPage() {
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
             </svg>
-            Ask Knowledia AI
+            Ask Knowledia AI · answers from your REX sheets
           </p>
           {chatMessages.length > 0 && (
             <div className="space-y-3 mb-3 max-h-64 overflow-y-auto">
@@ -109,16 +109,27 @@ export default function SearchPage() {
                   {msg.role === "assistant" && (
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-200 text-[10px] font-bold text-purple-700">AI</div>
                   )}
-                  <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-                    msg.role === "user" ? "bg-brand-600 text-white" : "bg-white border border-gray-200 text-gray-700"
+                  <div className={`max-w-[85%] rounded-xl px-3 py-2.5 text-sm ${
+                    msg.role === "user" ? "bg-brand-600 text-white" : "bg-white border border-gray-200 text-gray-700 shadow-sm"
                   }`}>
-                    <p>{msg.text}</p>
+                    <p className="leading-relaxed">{msg.text}</p>
                     {msg.references && msg.references.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
+                      <div className="mt-3 border-t border-gray-100 pt-2.5 space-y-1.5">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Sources</p>
                         {msg.references.map((ref) => (
                           <Link key={ref.id} href={`/learnings/${ref.id}`}
-                            className="rounded bg-purple-50 px-2 py-0.5 text-[10px] text-purple-700 hover:bg-purple-100">
-                            {ref.title}
+                            className="flex items-start gap-2 rounded-lg bg-purple-50 px-2.5 py-2 hover:bg-purple-100 transition-colors group">
+                            <svg className="h-3.5 w-3.5 mt-0.5 shrink-0 text-purple-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                            </svg>
+                            <div className="min-w-0">
+                              <p className="text-[12px] font-medium text-purple-700 group-hover:text-purple-800 leading-tight truncate">{ref.title}</p>
+                              {(ref.author || ref.department) && (
+                                <p className="text-[10px] text-gray-400 mt-0.5">
+                                  {ref.author}{ref.author && ref.department ? " · " : ""}{ref.department}
+                                </p>
+                              )}
+                            </div>
                           </Link>
                         ))}
                       </div>
@@ -137,7 +148,7 @@ export default function SearchPage() {
           <form onSubmit={handleChat} className="flex gap-2">
             <input
               type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Ask a question about the knowledge base..."
+              placeholder="e.g. How did we handle the VAT audit in Germany?"
               className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-purple-400 outline-none placeholder:text-gray-400"
             />
             <button type="submit" disabled={chatLoading || !chatInput.trim()}

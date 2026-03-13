@@ -1,10 +1,10 @@
-"""LLM provider abstraction — supports Grok, OpenAI, or heuristic fallback.
+"""LLM provider abstraction — supports Grok, OpenAI, Llama (Ollama), or heuristic fallback.
 
 Configure via environment variables:
-  LLM_PROVIDER=grok|openai|none
-  LLM_API_KEY=your-api-key
-  LLM_MODEL=grok-2 | gpt-4o | etc.
-  LLM_BASE_URL=https://api.x.ai/v1 (for Grok)
+  LLM_PROVIDER=grok|openai|llama|ollama|none
+  LLM_API_KEY=your-api-key (optional for llama/ollama)
+  LLM_MODEL=grok-2 | gpt-4o | llama3.2 | etc.
+  LLM_BASE_URL=https://api.x.ai/v1 (Grok) or http://localhost:11434/v1 (Ollama)
 """
 
 from __future__ import annotations
@@ -64,20 +64,29 @@ class HeuristicProvider(LLMProvider):
 
 
 class OpenAICompatibleProvider(LLMProvider):
-    """Works with both OpenAI and Grok (xAI) APIs via the OpenAI-compatible interface."""
+    """Works with OpenAI, Grok (xAI), and Llama via Ollama — any OpenAI-compatible API."""
 
-    def __init__(self):
-        self.api_key = settings.llm_api_key
-        self.model = settings.llm_model or "gpt-4o"
-        self.base_url = settings.llm_base_url or "https://api.openai.com/v1"
+    def __init__(
+        self,
+        *,
+        base_url: str | None = None,
+        model: str | None = None,
+        api_key: str | None = None,
+    ):
+        self.base_url = base_url or settings.llm_base_url or "https://api.openai.com/v1"
+        self.model = model or settings.llm_model or "gpt-4o"
+        self.api_key = api_key if api_key is not None else settings.llm_api_key
 
     async def _call(self, messages: list[dict], max_tokens: int = 500) -> str:
         try:
             import httpx
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            headers = {"Content-Type": "application/json"}
+            if self.api_key:
+                headers["Authorization"] = f"Bearer {self.api_key}"
+            async with httpx.AsyncClient(timeout=60.0) as client:
                 resp = await client.post(
-                    f"{self.base_url}/chat/completions",
-                    headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
+                    f"{self.base_url.rstrip('/')}/chat/completions",
+                    headers=headers,
                     json={"model": self.model, "messages": messages, "max_tokens": max_tokens, "temperature": 0.3},
                 )
                 resp.raise_for_status()
@@ -119,21 +128,58 @@ class OpenAICompatibleProvider(LLMProvider):
         return []
 
     async def chat(self, question: str, context: list[dict]) -> str:
-        ctx_text = "\n\n".join(
-            f"REX: {c.get('title', '')}\nProblem: {c.get('problematic', '')[:300]}\nSolution: {c.get('solution', '')[:300]}"
-            for c in context[:5]
+        if not context:
+            return "I couldn't find any relevant REX sheets in the knowledge base for your question."
+
+        # Build a rich context block from the retrieved REX sheets
+        ctx_parts = []
+        for i, c in enumerate(context[:8], start=1):
+            tags = c.get("tags", "none")
+            dept = c.get("department", "")
+            author = c.get("author", "")
+            category = c.get("category", "")
+            meta = f"[REX #{c.get('id', i)}: {c.get('title', '')}]"
+            if author or dept:
+                meta += f" — by {author}" + (f" ({dept})" if dept else "")
+            if category:
+                meta += f" | Category: {category}"
+            if tags and tags != "none":
+                meta += f" | Tags: {tags}"
+            problem = c.get("problematic", "")[:400]
+            solution = c.get("solution", "")[:400]
+            ctx_parts.append(f"{meta}\nProblem: {problem}\nSolution: {solution}")
+
+        ctx_text = "\n\n---\n\n".join(ctx_parts)
+
+        system_prompt = (
+            "You are Knowledia, an AI knowledge assistant for a professional services firm. "
+            "You ONLY answer using the REX (Return of Experience) sheets provided below as your knowledge base. "
+            "If the answer is not clearly supported by the REX sheets, say so honestly rather than making things up.\n\n"
+            "Guidelines:\n"
+            "- Give a direct, concise answer (2-4 sentences max).\n"
+            "- Always cite the source REX sheet(s) by their title or ID, e.g. 'According to REX #3 ...'.\n"
+            "- If multiple REX sheets are relevant, synthesize them.\n"
+            "- If no REX sheet answers the question, say: 'I don't have a REX sheet covering that topic yet.'\n"
+            "- Never invent facts not present in the provided REX sheets."
         )
+
         result = await self._call([
-            {"role": "system", "content": "You are Knowledia's AI assistant. Answer questions using the REX sheet context provided. Be concise and reference specific REX sheets when relevant."},
-            {"role": "user", "content": f"Context from knowledge base:\n{ctx_text}\n\nQuestion: {question}"},
-        ], max_tokens=400)
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"Knowledge base (REX sheets):\n\n{ctx_text}\n\n---\n\nQuestion: {question}"},
+        ], max_tokens=500)
         if not result:
             return await HeuristicProvider().chat(question, context)
         return result
 
 
 def get_llm_provider() -> LLMProvider:
-    provider = settings.llm_provider.lower()
+    provider = (settings.llm_provider or "").lower()
+    if provider in ("llama", "ollama"):
+        return OpenAICompatibleProvider(
+            base_url=settings.llm_base_url or "http://localhost:11434/v1",
+            model=settings.llm_model or "llama3.2",
+            api_key=settings.llm_api_key or "ollama",
+        )
     if provider in ("grok", "openai") and settings.llm_api_key:
         return OpenAICompatibleProvider()
     return HeuristicProvider()
