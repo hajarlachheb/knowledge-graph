@@ -1,49 +1,85 @@
-"""Graph API — subgraph visualization and node lookup."""
+"""Knowledge graph endpoint: returns nodes and edges with contribution-weighted sizing."""
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from app.models.graph import SubgraphResponse
-from app.services.graph_db import GraphDB
-from app.api.deps import get_graph_db
+from app.db.postgres import get_session
+from app.db.models import Department, RexSheet, Skill, Tag, User, Vote
+from app.models.schemas import GraphEdge, GraphNode, GraphResponse
 
 router = APIRouter(prefix="/graph", tags=["graph"])
 
 
-@router.get("/node/{node_id}")
-async def get_node(node_id: str, db: GraphDB = Depends(get_graph_db)):
-    node = await db.get_node(node_id)
-    if node is None:
-        return {"error": "Node not found"}
-    return node
+@router.get("", response_model=GraphResponse)
+async def get_knowledge_graph(session: AsyncSession = Depends(get_session)):
+    nodes: list[GraphNode] = []
+    edges: list[GraphEdge] = []
 
+    depts = (await session.execute(select(Department))).scalars().all()
+    for d in depts:
+        nodes.append(GraphNode(id=f"dept-{d.id}", label=d.name, type="department"))
 
-@router.get("/search")
-async def search_nodes(
-    q: str = Query(min_length=1),
-    limit: int = Query(default=10, ge=1, le=50),
-    db: GraphDB = Depends(get_graph_db),
-):
-    return await db.search_nodes(q, limit=limit)
+    users = (await session.execute(
+        select(User).options(
+            selectinload(User.skills),
+            selectinload(User.department),
+            selectinload(User.rex_sheets).selectinload(RexSheet.votes_rel),
+            selectinload(User.rex_sheets).selectinload(RexSheet.tags),
+        )
+    )).scalars().unique().all()
 
+    for u in users:
+        sheets = u.rex_sheets or []
+        rex_count = len(sheets)
+        total_votes = sum(sum(v.value for v in (r.votes_rel or [])) for r in sheets)
+        contributor_score = total_votes + rex_count * 2
 
-@router.get("/subgraph/{node_id}", response_model=SubgraphResponse)
-async def get_subgraph(
-    node_id: str,
-    depth: int = Query(default=1, ge=1, le=3),
-    db: GraphDB = Depends(get_graph_db),
-):
-    result = await db.get_subgraph(node_id, depth=depth)
-    return SubgraphResponse(nodes=result["nodes"], edges=result["edges"])
+        tag_freq: dict[str, int] = {}
+        for r in sheets:
+            for t in (r.tags or []):
+                tag_freq[t.name] = tag_freq.get(t.name, 0) + 1
+        top_tags = sorted(tag_freq, key=lambda x: tag_freq[x], reverse=True)[:3]
 
+        nodes.append(GraphNode(
+            id=f"user-{u.id}",
+            label=u.full_name or u.username,
+            type="person",
+            meta={
+                "position": u.position,
+                "department": u.department.name if u.department else "",
+                "rex_count": str(rex_count),
+                "total_votes": str(total_votes),
+                "contributor_score": str(contributor_score),
+                "is_trusted": str(contributor_score >= 10),
+                "top_tags": ", ".join(top_tags),
+            },
+        ))
+        if u.department:
+            edges.append(GraphEdge(source=f"user-{u.id}", target=f"dept-{u.department_id}", label="belongs to"))
+        for s in u.skills:
+            edges.append(GraphEdge(source=f"user-{u.id}", target=f"skill-{s.id}", label="has skill"))
 
-@router.get("/traverse")
-async def traverse(
-    entity: str = Query(min_length=1),
-    rel_types: str | None = Query(default=None, description="Comma-separated relationship types"),
-    limit: int = Query(default=20, ge=1, le=100),
-    db: GraphDB = Depends(get_graph_db),
-):
-    types = [r.strip() for r in rel_types.split(",")] if rel_types else None
-    return await db.traverse_from_entity(entity, rel_types=types, limit=limit)
+    skills = (await session.execute(select(Skill))).scalars().all()
+    for s in skills:
+        nodes.append(GraphNode(id=f"skill-{s.id}", label=s.name, type="skill"))
+
+    tags = (await session.execute(select(Tag))).scalars().all()
+    for t in tags:
+        nodes.append(GraphNode(id=f"tag-{t.id}", label=t.name, type="topic"))
+
+    rex_sheets = (await session.execute(
+        select(RexSheet).options(selectinload(RexSheet.tags))
+    )).scalars().unique().all()
+    author_topics: set[tuple[str, str]] = set()
+    for rex in rex_sheets:
+        for t in rex.tags:
+            key = (f"user-{rex.author_id}", f"tag-{t.id}")
+            if key not in author_topics:
+                author_topics.add(key)
+                edges.append(GraphEdge(source=key[0], target=key[1], label="contributed to"))
+
+    return GraphResponse(nodes=nodes, edges=edges)

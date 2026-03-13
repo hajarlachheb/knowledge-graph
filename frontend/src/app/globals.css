@@ -9,8 +9,3 @@ html {
 body {
   @apply bg-gray-50 text-gray-900 antialiased;
 }
-
-/* React Flow overrides */
-.react-flow__node {
-  font-size: 12px;
-}

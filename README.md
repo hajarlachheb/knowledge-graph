@@ -1,47 +1,35 @@
-# AI Knowledge Graph — Company Knowledge Management
+# LearnHub — Knowledge Sharing Platform
 
-An AI-powered internal knowledge graph that ingests content from Notion, extracts entities and relationships, stores them in a graph, and lets employees ask natural-language questions with source citations.
+A platform where people save and share their learnings (problem/solution), browse others' knowledge, and discover who knows what.
 
 ## Quick Start
 
 ### Prerequisites
 
-- Docker & Docker Compose
+- Python 3.11+
 - Node.js 20+
-- Python 3.12+
-- An OpenAI API key
-- A Notion integration token (with access to target pages)
 
-### 1. Clone & configure
+No Docker, no external databases — uses SQLite (zero config).
+
+### 1. Configure
 
 ```bash
 cp .env.example .env
-# Edit .env with your actual keys:
-#   OPENAI_API_KEY, NOTION_API_KEY, NOTION_ROOT_PAGE_ID
+# Optionally edit SECRET_KEY in .env
 ```
 
-### 2. Start infrastructure
-
-```bash
-docker compose up -d neo4j postgres weaviate
-```
-
-This starts:
-- **Neo4j** on `bolt://localhost:7687` (browser at `http://localhost:7474`)
-- **PostgreSQL** on `localhost:5432`
-- **Weaviate** on `http://localhost:8081`
-
-### 3. Run the backend
+### 2. Start the backend
 
 ```bash
 cd backend
 pip install -r requirements.txt
+python seed.py            # optional: load demo data (3 users, 6 learnings)
 uvicorn app.main:app --reload --port 8000
 ```
 
-API docs available at `http://localhost:8000/docs`.
+API docs: **http://localhost:8000/docs**
 
-### 4. Run the frontend
+### 3. Start the frontend
 
 ```bash
 cd frontend
@@ -49,34 +37,27 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open your browser at **port 3000**
 
-### 5. Ingest Notion content
+### 4. Try it
 
-Trigger a full sync via the API:
+If you ran the seed script, you can log in with:
 
-```bash
-curl -X POST http://localhost:8000/api/ingestion/sync
-```
+- **Email:** `alice@example.com` **Password:** `password`
+- **Email:** `bob@example.com` **Password:** `password`
+- **Email:** `carol@example.com` **Password:** `password`
 
-Or ingest a single page:
-
-```bash
-curl -X POST http://localhost:8000/api/ingestion/page/<notion-page-id>
-```
-
-### 6. Search
-
-Go to `http://localhost:3000` and ask a question like:
-
-> "Who worked on the recommendation system?"
-
-The system will:
-1. Embed your query and search the vector store
-2. Traverse the knowledge graph for related entities
-3. Combine context and generate an answer with source citations
+Or create a new account via Sign Up.
 
 ---
+
+## Features
+
+- **Share learnings** — Problem/solution format with tags
+- **Browse** — Feed with search and tag filtering
+- **Profiles** — See who contributed what knowledge
+- **Bookmarks** — Save learnings for later
+- **Explore topics** — Browse by tags
 
 ## Project Structure
 
@@ -84,112 +65,77 @@ The system will:
 knowledge-graph/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py              # FastAPI entry point
-│   │   ├── config.py            # Environment settings
-│   │   ├── models/              # Pydantic schemas
-│   │   │   ├── graph.py         # Node/Relationship types
-│   │   │   ├── search.py        # Search request/response
-│   │   │   └── feedback.py      # User feedback
-│   │   ├── services/            # Core business logic
-│   │   │   ├── notion.py        # Notion API client
-│   │   │   ├── ingestion.py     # End-to-end ingestion pipeline
-│   │   │   ├── extraction.py    # LLM entity/relationship extraction
-│   │   │   ├── entity_resolution.py  # Deduplication
-│   │   │   ├── graph_db.py      # Neo4j operations
-│   │   │   ├── vector_store.py  # Weaviate operations
-│   │   │   ├── embeddings.py    # OpenAI embeddings + chunking
-│   │   │   └── search.py        # RAG pipeline
-│   │   ├── api/                 # FastAPI routers
-│   │   │   ├── search.py        # POST /api/search
-│   │   │   ├── ingestion.py     # POST /api/ingestion/sync
-│   │   │   ├── graph.py         # GET /api/graph/*
-│   │   │   ├── feedback.py      # POST /api/feedback
-│   │   │   └── deps.py          # Dependency injection
-│   │   └── db/                  # PostgreSQL
-│   │       ├── postgres.py      # Async engine/session
-│   │       └── models.py        # SQLAlchemy ORM models
-│   ├── requirements.txt
-│   └── Dockerfile
+│   │   ├── main.py            # FastAPI entry point
+│   │   ├── config.py          # Settings (SQLite, JWT)
+│   │   ├── auth.py            # JWT + password hashing
+│   │   ├── models/
+│   │   │   └── schemas.py     # Pydantic request/response schemas
+│   │   ├── api/
+│   │   │   ├── deps.py        # Auth dependencies
+│   │   │   ├── auth.py        # POST /register, /login, GET /me
+│   │   │   ├── learnings.py   # CRUD + list/search/filter
+│   │   │   ├── users.py       # Profiles
+│   │   │   ├── tags.py        # Topic browsing
+│   │   │   └── bookmarks.py   # Save/unsave
+│   │   └── db/
+│   │       ├── postgres.py    # SQLite engine + session
+│   │       └── models.py      # ORM models
+│   ├── seed.py                # Demo data loader
+│   └── requirements.txt
 ├── frontend/
 │   ├── src/
 │   │   ├── app/
-│   │   │   ├── layout.tsx       # Root layout with nav
-│   │   │   ├── page.tsx         # Search page
-│   │   │   └── graph/page.tsx   # Graph explorer page
+│   │   │   ├── layout.tsx           # Root layout + AuthProvider
+│   │   │   ├── page.tsx             # Feed (browse learnings)
+│   │   │   ├── login/page.tsx
+│   │   │   ├── register/page.tsx
+│   │   │   ├── explore/page.tsx     # Browse tags
+│   │   │   ├── bookmarks/page.tsx
+│   │   │   ├── learnings/
+│   │   │   │   ├── new/page.tsx     # Create learning
+│   │   │   │   └── [id]/
+│   │   │   │       ├── page.tsx     # Learning detail
+│   │   │   │       └── edit/page.tsx
+│   │   │   └── users/
+│   │   │       └── [id]/page.tsx    # User profile
 │   │   ├── components/
-│   │   │   ├── SearchBar.tsx
-│   │   │   ├── SearchResults.tsx
-│   │   │   ├── SourceCitation.tsx
-│   │   │   ├── FeedbackButtons.tsx
-│   │   │   └── GraphViewer.tsx  # React Flow graph visualization
+│   │   │   ├── Navbar.tsx
+│   │   │   ├── LearningCard.tsx
+│   │   │   ├── LearningForm.tsx
+│   │   │   ├── TagBadge.tsx
+│   │   │   └── BookmarkButton.tsx
 │   │   └── lib/
-│   │       └── api.ts           # Backend API client
-│   ├── package.json
-│   └── Dockerfile
-├── docs/
-│   └── architecture.md          # Architecture diagram + Cypher examples
-├── docker-compose.yml           # Neo4j, Postgres, Weaviate, backend, frontend
+│   │       ├── api.ts               # Backend API client
+│   │       └── AuthContext.tsx       # Auth state management
+│   └── package.json
 ├── .env.example
 └── README.md
 ```
 
 ## API Endpoints
 
-| Method | Path                          | Description                              |
-|--------|-------------------------------|------------------------------------------|
-| POST   | `/api/search`                 | Semantic search with source citations    |
-| POST   | `/api/ingestion/sync`         | Trigger full Notion sync                 |
-| POST   | `/api/ingestion/page/{id}`    | Ingest a single Notion page              |
-| GET    | `/api/graph/node/{id}`        | Get a single graph node                  |
-| GET    | `/api/graph/search?q=`        | Search graph nodes by name               |
-| GET    | `/api/graph/subgraph/{id}`    | Get subgraph around a node               |
-| GET    | `/api/graph/traverse`         | Traverse from entity by relationship     |
-| POST   | `/api/feedback`               | Submit thumbs up/down feedback           |
-| GET    | `/health`                     | Health check                             |
+| Method | Path                        | Auth     | Description                     |
+|--------|-----------------------------|---------|---------------------------------|
+| POST   | `/api/auth/register`        | No      | Create account                  |
+| POST   | `/api/auth/login`           | No      | Sign in, get JWT                |
+| GET    | `/api/auth/me`              | Yes     | Current user profile            |
+| GET    | `/api/learnings`            | Optional | List learnings (search, filter) |
+| POST   | `/api/learnings`            | Yes     | Create a learning               |
+| GET    | `/api/learnings/{id}`       | Optional | Get learning detail             |
+| PUT    | `/api/learnings/{id}`       | Owner   | Update a learning               |
+| DELETE | `/api/learnings/{id}`       | Owner   | Delete a learning               |
+| GET    | `/api/users/{id}`           | No      | User profile + stats            |
+| GET    | `/api/users/{id}/learnings` | Optional | User's learnings                |
+| GET    | `/api/tags`                 | No      | All tags with counts            |
+| GET    | `/api/bookmarks`            | Yes     | Your bookmarked learnings       |
+| POST   | `/api/bookmarks/{id}`       | Yes     | Bookmark a learning             |
+| DELETE | `/api/bookmarks/{id}`       | Yes     | Remove bookmark                 |
 
 ## Tech Stack
 
-| Component       | Technology                    |
-|-----------------|-------------------------------|
-| Graph DB        | Neo4j 5 (Cypher)              |
-| Vector Store    | Weaviate                      |
-| LLM / RAG       | LangChain + OpenAI GPT-4o     |
-| Embeddings      | OpenAI text-embedding-3-small |
-| Backend         | FastAPI (Python 3.12)         |
-| Frontend        | Next.js 14 + Tailwind CSS     |
-| Metadata DB     | PostgreSQL 16                 |
-| Graph Viz       | React Flow + Dagre            |
-
-## Key Design Decisions
-
-1. **Mandatory source citations** — Every search answer must include at least one source. If no supporting documents are found, the system responds with "I don't have enough information."
-
-2. **Incremental sync** — Documents are hashed; only changed pages are re-processed to minimize API calls and LLM costs.
-
-3. **Entity resolution** — Fuzzy name matching deduplicates entities so "Alice", "Alice Smith", and "@alice" merge into one node.
-
-4. **Hybrid retrieval** — Combines vector similarity search (for semantic relevance) with graph traversal (for structural connections like "who worked on what").
-
-5. **Privacy-first** — Document permissions are stored alongside metadata; the search layer can enforce access control.
-
-## Environment Variables
-
-See `.env.example` for the full list. The critical ones:
-
-| Variable              | Required | Description                   |
-|-----------------------|----------|-------------------------------|
-| `OPENAI_API_KEY`      | Yes      | OpenAI API key                |
-| `NOTION_API_KEY`      | Yes      | Notion integration token      |
-| `NOTION_ROOT_PAGE_ID` | Yes      | Root page to start ingesting  |
-| `NEO4J_PASSWORD`      | Yes      | Neo4j database password       |
-| `WEAVIATE_URL`        | No       | Defaults to localhost:8081    |
-
-## Future Work (Out of MVP Scope)
-
-- Slack ingestion (messages + threads)
-- GitHub ingestion (PRs, issues, README files)
-- Meeting transcript ingestion
-- Expertise detection via PageRank on the graph
-- Decision intelligence ("Why was this decided?")
-- Advanced analytics dashboard
-- Fine-tuned extraction model for higher precision
+| Component | Technology           |
+|-----------|----------------------|
+| Backend   | FastAPI (Python)     |
+| Frontend  | Next.js 14 + Tailwind |
+| Database  | SQLite (via aiosqlite) |
+| Auth      | JWT (python-jose)    |
