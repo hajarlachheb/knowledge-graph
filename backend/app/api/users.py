@@ -168,3 +168,42 @@ async def get_user_rex_sheets(
 
     uid = current_user.id if current_user else None
     return RexListOut(items=[_rex_to_out(r, uid) for r in sheets], total=total, page=page, page_size=page_size)
+
+
+@router.get("/me/email-preferences")
+async def get_email_preferences(
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    from app.db.models import EmailPreference
+    result = await session.execute(
+        select(EmailPreference).where(EmailPreference.user_id == current_user.id)
+    )
+    pref = result.scalar_one_or_none()
+    if not pref:
+        return {"weekly_digest": True, "new_from_followed": True, "saved_search_alerts": True}
+    return {"weekly_digest": pref.weekly_digest, "new_from_followed": pref.new_from_followed, "saved_search_alerts": pref.saved_search_alerts}
+
+
+@router.put("/me/email-preferences")
+async def update_email_preferences(
+    body: dict,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    from app.db.models import EmailPreference
+    result = await session.execute(
+        select(EmailPreference).where(EmailPreference.user_id == current_user.id)
+    )
+    pref = result.scalar_one_or_none()
+    if not pref:
+        pref = EmailPreference(user_id=current_user.id)
+        session.add(pref)
+    if "weekly_digest" in body:
+        pref.weekly_digest = body["weekly_digest"]
+    if "new_from_followed" in body:
+        pref.new_from_followed = body["new_from_followed"]
+    if "saved_search_alerts" in body:
+        pref.saved_search_alerts = body["saved_search_alerts"]
+    await session.commit()
+    return {"weekly_digest": pref.weekly_digest, "new_from_followed": pref.new_from_followed, "saved_search_alerts": pref.saved_search_alerts}

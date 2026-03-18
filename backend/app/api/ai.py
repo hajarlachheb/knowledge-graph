@@ -11,11 +11,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db.postgres import get_session
-from app.db.models import Bookmark, RexSheet, RexTag, Tag, User
+from app.db.models import Bookmark, ChatMessage, ChatThread, RexSheet, RexTag, SearchLog, Tag, User
 from app.models.schemas import RexOut, DepartmentOut, SkillOut, TagOut, UserOut
 from app.api.deps import get_current_user, get_optional_user
 from app.api.learnings import _rex_to_out, _rex_query
 from app.llm import get_llm_provider
+import json
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -164,54 +165,70 @@ async def ai_chat(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    """RAG-powered conversational Q&A: retrieves relevant REX sheets then answers with Llama."""
+    """RAG-powered conversational Q&A with persistent thread support."""
     question = body.get("question", "").strip()
+    thread_id = body.get("thread_id")
     if not question:
-        return {"answer": "Please provide a question."}
+        return {"answer": "Please provide a question.", "thread_id": thread_id}
 
-    # ── Retrieval: score ALL published REX sheets against the query ──────────
+    # Log the search
+    session.add(SearchLog(user_id=current_user.id, query=question, results_count=0))
+
+    # Retrieval
     keywords = _extract_keywords(question)
     result = await session.execute(_rex_query().where(RexSheet.status == "published"))
     all_rex = list(result.scalars().unique().all())
 
     if not keywords:
-        # No keywords — fall back to most-voted recent REX as context
-        all_rex_sorted = sorted(all_rex, key=lambda r: r.upvotes - r.downvotes, reverse=True)
-        top_rex = all_rex_sorted[:8]
-        scored_pairs = [(r, 1.0) for r in top_rex]
+        all_rex_sorted = sorted(
+            all_rex,
+            key=lambda r: sum(v.value for v in (r.votes_rel or [])),
+            reverse=True,
+        )
+        scored_pairs = [(r, 1.0) for r in all_rex_sorted[:8]]
     else:
         scored_pairs = [(rex, _score_rex(rex, keywords)) for rex in all_rex]
         scored_pairs = [(r, s) for r, s in scored_pairs if s > 0]
         scored_pairs.sort(key=lambda x: x[1], reverse=True)
 
-    # ── Build rich context documents for Llama ────────────────────────────────
     context = []
     for r, score in scored_pairs[:8]:
         tags = ", ".join(t.name for t in (r.tags or [])) or "none"
         dept = r.author.department.name if (r.author and r.author.department) else "unknown"
         author_name = r.author.full_name or r.author.username if r.author else "unknown"
         context.append({
-            "id": r.id,
-            "title": r.title,
-            "author": author_name,
-            "department": dept,
-            "category": r.category or "general",
-            "tags": tags,
-            "problematic": r.problematic,
-            "solution": r.solution,
-            "score": score,
+            "id": r.id, "title": r.title, "author": author_name,
+            "department": dept, "category": r.category or "general",
+            "tags": tags, "problematic": r.problematic, "solution": r.solution, "score": score,
         })
 
-    # ── Generate answer with Llama ────────────────────────────────────────────
     llm = get_llm_provider()
     answer = await llm.chat(question, context)
 
-    # Return top-3 sources for the frontend to display
     rex_refs = [
         {"id": c["id"], "title": c["title"], "author": c["author"], "department": c["department"]}
         for c in context[:3]
     ]
-    return {"answer": answer, "references": rex_refs}
+
+    # Persist to thread
+    if thread_id:
+        thread_result = await session.execute(
+            select(ChatThread).where(ChatThread.id == thread_id, ChatThread.user_id == current_user.id)
+        )
+        thread = thread_result.scalar_one_or_none()
+    else:
+        thread = None
+
+    if not thread:
+        thread = ChatThread(user_id=current_user.id, title=question[:80])
+        session.add(thread)
+        await session.flush()
+
+    session.add(ChatMessage(thread_id=thread.id, role="user", content=question))
+    session.add(ChatMessage(thread_id=thread.id, role="assistant", content=answer, references_json=json.dumps(rex_refs)))
+    await session.commit()
+
+    return {"answer": answer, "references": rex_refs, "thread_id": thread.id}
 
 
 @router.get("/who-knows")

@@ -9,8 +9,11 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+import httpx
+
 from app.db.postgres import get_session
 from app.db.models import Bookmark, Comment, RexSheet, RexTag, RexView, Tag, User, Vote
+from app.config import settings
 from app.models.schemas import (
     DepartmentOut,
     RexCreate,
@@ -82,6 +85,27 @@ def _rex_query():
     )
 
 
+@router.get("/trending", response_model=list[RexOut])
+async def trending_rex(
+    days: int = Query(7, ge=1, le=90),
+    limit: int = Query(10, ge=1, le=50),
+    session: AsyncSession = Depends(get_session),
+    current_user: User | None = Depends(get_optional_user),
+):
+    """Most viewed + voted REX in the last N days."""
+    cutoff = datetime.utcnow() - timedelta(days=days)
+    result = await session.execute(
+        _rex_query().where(RexSheet.status == "published", RexSheet.created_at >= cutoff)
+    )
+    sheets = list(result.scalars().unique().all())
+    uid = current_user.id if current_user else None
+    sheets.sort(
+        key=lambda r: sum(v.value for v in (r.votes_rel or [])) + len(r.views_rel or []),
+        reverse=True,
+    )
+    return [_rex_to_out(r, uid) for r in sheets[:limit]]
+
+
 @router.get("", response_model=RexListOut)
 async def list_rex(
     page: int = Query(1, ge=1),
@@ -92,6 +116,11 @@ async def list_rex(
     category: str | None = None,
     q: str | None = None,
     sort: str = Query("newest", regex="^(newest|oldest|most_voted|most_viewed)$"),
+    date_from: str | None = None,
+    date_to: str | None = None,
+    trusted_only: bool = False,
+    has_comments: bool = False,
+    min_votes: int | None = None,
     session: AsyncSession = Depends(get_session),
     current_user: User | None = Depends(get_optional_user),
 ):
@@ -114,6 +143,21 @@ async def list_rex(
         pattern = f"%{q}%"
         query = query.where(RexSheet.title.ilike(pattern) | RexSheet.problematic.ilike(pattern))
         count_query = count_query.where(RexSheet.title.ilike(pattern) | RexSheet.problematic.ilike(pattern))
+
+    if date_from:
+        try:
+            df = datetime.fromisoformat(date_from)
+            query = query.where(RexSheet.created_at >= df)
+            count_query = count_query.where(RexSheet.created_at >= df)
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            dt = datetime.fromisoformat(date_to)
+            query = query.where(RexSheet.created_at <= dt)
+            count_query = count_query.where(RexSheet.created_at <= dt)
+        except ValueError:
+            pass
 
     total = (await session.execute(count_query)).scalar() or 0
 
@@ -181,6 +225,16 @@ async def create_rex(
     await session.commit()
     result = await session.execute(_rex_query().where(RexSheet.id == rex.id))
     rex = result.scalar_one()
+
+    if body.status == "published" and settings.slack_webhook_url:
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                await client.post(settings.slack_webhook_url, json={
+                    "text": f"New REX published: *{rex.title}* by {current_user.full_name or current_user.username}",
+                })
+        except Exception:
+            pass
+
     return _rex_to_out(rex, current_user.id)
 
 
@@ -275,3 +329,20 @@ async def delete_rex(
         raise HTTPException(status_code=403, detail="Not your REX sheet")
     await session.delete(rex)
     await session.commit()
+
+
+@router.post("/{rex_id}/flag")
+async def flag_rex(
+    rex_id: int,
+    body: dict,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    result = await session.execute(select(RexSheet).where(RexSheet.id == rex_id))
+    rex = result.scalar_one_or_none()
+    if not rex:
+        raise HTTPException(status_code=404, detail="REX sheet not found")
+    rex.flagged = True
+    rex.flagged_reason = body.get("reason", "")
+    await session.commit()
+    return {"ok": True}

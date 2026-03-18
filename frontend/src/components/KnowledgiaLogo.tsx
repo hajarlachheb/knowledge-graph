@@ -1,6 +1,6 @@
 "use client";
 
-interface KnowlediaLogoProps {
+interface KnowledgiaLogoProps {
   /** Icon only (no wordmark). Good for collapsed sidebar or favicon. */
   iconOnly?: boolean;
   /** Size: "sm" (sidebar), "md" (mobile header), "lg" (landing). */
@@ -16,12 +16,12 @@ const sizeMap = {
   lg: { icon: 32, text: "text-2xl" },
 };
 
-export default function KnowlediaLogo({
+export default function KnowledgiaLogo({
   iconOnly = false,
   size = "sm",
   variant = "default",
   className = "",
-}: KnowlediaLogoProps) {
+}: KnowledgiaLogoProps) {
   const { icon: iconSize, text: textSize } = sizeMap[size];
   const isLight = variant === "light";
   const iconColor = isLight ? "currentColor" : "#4f46e5"; // brand-600 fallback if not using Tailwind in SVG
@@ -30,7 +30,7 @@ export default function KnowlediaLogo({
   return (
     <span
       className={`inline-flex items-center gap-2 shrink-0 ${className}`}
-      aria-label="Knowledia"
+      aria-label="Knowledgia"
     >
       <svg
         width={iconSize}
@@ -73,7 +73,7 @@ export default function KnowlediaLogo({
       </svg>
       {!iconOnly && (
         <span className={`font-semibold tracking-tight ${textSize} ${textClass}`}>
-          Knowledia
+          Knowledgia
         </span>
       )}
     </span>

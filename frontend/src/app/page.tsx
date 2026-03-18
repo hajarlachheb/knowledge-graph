@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { login } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
-import KnowlediaLogo from "@/components/KnowlediaLogo";
+import KnowledgiaLogo from "@/components/KnowledgiaLogo";
 
 export default function LandingPage() {
   const [email, setEmail] = useState("");
@@ -35,7 +35,7 @@ export default function LandingPage() {
       {/* Left — branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-brand-600 via-brand-700 to-indigo-800 text-white flex-col justify-between p-12">
         <div>
-          <KnowlediaLogo size="lg" variant="light" />
+          <KnowledgiaLogo size="lg" variant="light" />
           <p className="mt-1 text-brand-200 text-sm">Corporate Knowledge Management</p>
         </div>
 
@@ -54,7 +54,7 @@ export default function LandingPage() {
             </div>
             <div className="flex items-start gap-3">
               <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-bold">3</span>
-              <div><p className="font-medium text-white">Ask Knowledia</p><p className="text-sm">AI-powered search — ask in plain language, get answers from your colleagues&apos; experience.</p></div>
+              <div><p className="font-medium text-white">Ask Knowledgia</p><p className="text-sm">AI-powered search — ask in plain language, get answers from your colleagues&apos; experience.</p></div>
             </div>
           </div>
         </div>
@@ -66,7 +66,7 @@ export default function LandingPage() {
       <div className="flex flex-1 items-center justify-center p-8">
         <div className="w-full max-w-sm">
           <div className="lg:hidden flex items-center justify-center mb-8">
-            <KnowlediaLogo size="md" />
+            <KnowledgiaLogo size="md" />
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-1">Welcome back</h2>

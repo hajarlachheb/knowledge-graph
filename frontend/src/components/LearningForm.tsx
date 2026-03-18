@@ -68,40 +68,40 @@ export default function LearningForm({
 
   return (
     <form onSubmit={(e) => handleSubmit(e, "published")} className="space-y-5">
-      {error && <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">{error}</div>}
+      {error && <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-3 text-sm text-red-700 dark:text-red-400">{error}</div>}
 
       <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+        <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
         <input id="title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} required
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none"
+          className="w-full rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none"
           placeholder="e.g. How we reduced deploy time by 80%" />
       </div>
 
       <div>
-        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+        <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
         <select id="category" value={category} onChange={(e) => setCategory(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none">
+          className="w-full rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none">
           {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
         </select>
       </div>
 
       <div>
-        <label htmlFor="problematic" className="block text-sm font-medium text-gray-700 mb-1">Problematic</label>
+        <label htmlFor="problematic" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Problematic</label>
         <textarea id="problematic" value={problematic} onChange={(e) => setProblematic(e.target.value)} required rows={5}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none resize-y"
+          className="w-full rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none resize-y"
           placeholder="What was the problem? What was the context? What impact did it have?" />
       </div>
 
       <div>
-        <label htmlFor="solution" className="block text-sm font-medium text-gray-700 mb-1">Solution</label>
+        <label htmlFor="solution" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Solution</label>
         <textarea id="solution" value={solution} onChange={(e) => setSolution(e.target.value)} required rows={5}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none resize-y"
+          className="w-full rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none resize-y"
           placeholder="How did you solve it? What steps did you take? What was the result?" />
       </div>
 
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="tags" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Tags <span className="text-gray-400 font-normal">(comma-separated)</span>
           </label>
           <button type="button" onClick={handleSuggest}
@@ -113,13 +113,13 @@ export default function LearningForm({
           </button>
         </div>
         <input id="tags" type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none"
+          className="w-full rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none"
           placeholder="python, deployment, performance" />
         {suggestions.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1.5">
             {suggestions.map((s) => (
               <button key={s} type="button" onClick={() => addSuggestion(s)}
-                className="rounded-full border border-purple-200 bg-purple-50 px-2.5 py-0.5 text-xs text-purple-700 hover:bg-purple-100 transition-colors">
+                className="rounded-full border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/30 px-2.5 py-0.5 text-xs text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors">
                 + {s}
               </button>
             ))}
@@ -134,7 +134,7 @@ export default function LearningForm({
         </button>
         <button type="button" disabled={submitting}
           onClick={(e) => handleSubmit(e, "draft")}
-          className="rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+          className="rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors">
           Save as Draft
         </button>
       </div>

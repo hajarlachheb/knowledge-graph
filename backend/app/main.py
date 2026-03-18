@@ -15,6 +15,9 @@ from app.api import (
     auth, learnings, users, tags, bookmarks, departments, graph,
     dashboard, ai, votes, leaderboard, comments, notifications,
     follows, activity, export, admin,
+    reactions, saved_searches, attachments, templates, collections,
+    endorsements, badges, chat_threads, moderation, compliance,
+    roles, shared_links, bulk_import,
 )
 
 logging.basicConfig(level=settings.log_level)
@@ -63,6 +66,25 @@ app.include_router(follows.router, prefix="/api")
 app.include_router(activity.router, prefix="/api")
 app.include_router(export.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
+app.include_router(reactions.router, prefix="/api")
+app.include_router(saved_searches.router, prefix="/api")
+app.include_router(attachments.router, prefix="/api")
+app.include_router(templates.router, prefix="/api")
+app.include_router(collections.router, prefix="/api")
+app.include_router(endorsements.router, prefix="/api")
+app.include_router(badges.router, prefix="/api")
+app.include_router(chat_threads.router, prefix="/api")
+app.include_router(moderation.router, prefix="/api")
+app.include_router(compliance.router, prefix="/api")
+app.include_router(roles.router, prefix="/api")
+app.include_router(shared_links.router, prefix="/api")
+app.include_router(bulk_import.router, prefix="/api")
+
+from fastapi.staticfiles import StaticFiles
+import os
+uploads_dir = os.path.join(os.path.dirname(__file__), "..", "uploads")
+os.makedirs(uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 
 @app.get("/health")

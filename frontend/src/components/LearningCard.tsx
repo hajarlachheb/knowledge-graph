@@ -42,7 +42,7 @@ export default function RexCard({ rex, onBookmarkChange }: Props) {
     <>
       <article
         onClick={() => setShowModal(true)}
-        className="group relative flex flex-col justify-between rounded-xl border border-gray-200/80 bg-white p-4 cursor-pointer hover:shadow-md hover:border-gray-300/80 transition-all aspect-square"
+        className="group relative flex flex-col justify-between rounded-xl border border-gray-200/80 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 cursor-pointer hover:shadow-md hover:border-gray-300/80 dark:hover:border-gray-600 transition-all aspect-square"
       >
         {/* Top: category dot + vote */}
         <div className="flex items-center justify-between mb-2">
@@ -73,7 +73,7 @@ export default function RexCard({ rex, onBookmarkChange }: Props) {
 
         {/* Title */}
         <div className="flex-1 flex flex-col justify-center">
-          <h3 className="text-[14px] font-semibold text-gray-900 leading-snug line-clamp-3 group-hover:text-brand-700 transition-colors">
+          <h3 className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 leading-snug line-clamp-3 group-hover:text-brand-700 dark:group-hover:text-brand-400 transition-colors">
             {rex.title}
           </h3>
         </div>
@@ -83,7 +83,7 @@ export default function RexCard({ rex, onBookmarkChange }: Props) {
           {rex.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-2">
               {rex.tags.slice(0, 2).map((tag) => (
-                <span key={tag.id} className="rounded-full bg-gray-100 px-2 py-[2px] text-[10px] font-medium text-gray-500">
+                <span key={tag.id} className="rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-[2px] text-[10px] font-medium text-gray-500 dark:text-gray-400">
                   {tag.name}
                 </span>
               ))}
@@ -97,7 +97,7 @@ export default function RexCard({ rex, onBookmarkChange }: Props) {
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[10px] font-bold text-brand-700">
                 {(rex.author.full_name || rex.author.username).charAt(0).toUpperCase()}
               </span>
-              <span className="text-[12px] text-gray-600 truncate">
+              <span className="text-[12px] text-gray-600 dark:text-gray-400 truncate">
                 {rex.author.full_name || rex.author.username}
               </span>
             </div>

@@ -17,13 +17,13 @@ export default function EditRexPage() {
   useEffect(() => { getRexSheet(id).then(setRex).catch(() => setRex(null)).finally(() => setLoading(false)); }, [id]);
 
   if (loading || authLoading) return <div className="flex justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" /></div>;
-  if (!rex) return <p className="text-center py-20 text-gray-500">REX sheet not found</p>;
+  if (!rex) return <p className="text-center py-20 text-gray-500 dark:text-gray-400">REX sheet not found</p>;
   if (!user || user.id !== rex.author.id) { router.push(`/learnings/${id}`); return null; }
 
   return (
     <div className="w-full max-w-2xl min-w-0 mx-auto px-1 lg:max-w-3xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Edit REX Sheet</h1>
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Edit REX Sheet</h1>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
         <LearningForm
           initialTitle={rex.title}
           initialProblematic={rex.problematic}

@@ -250,3 +250,276 @@ class GraphEdge(BaseModel):
 class GraphResponse(BaseModel):
     nodes: list[GraphNode]
     edges: list[GraphEdge]
+
+
+# ── Reactions (Batch 2) ──────────────────────────────
+
+REACTION_TYPES = ["helpful", "applied", "insightful", "outdated"]
+
+class ReactionIn(BaseModel):
+    type: str = Field(..., description="One of: helpful, applied, insightful, outdated")
+
+class ReactionOut(BaseModel):
+    id: int
+    user_id: int
+    rex_id: int
+    type: str
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+class ReactionSummary(BaseModel):
+    helpful: int = 0
+    applied: int = 0
+    insightful: int = 0
+    outdated: int = 0
+    user_reactions: list[str] = []
+
+
+# ── Saved Searches (Batch 3) ────────────────────────
+
+class SavedSearchCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    filters_json: str = "{}"
+    notify: bool = False
+
+class SavedSearchOut(BaseModel):
+    id: int
+    name: str
+    filters_json: str
+    notify: bool
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+# ── Attachments (Batch 4) ───────────────────────────
+
+class AttachmentOut(BaseModel):
+    id: int
+    rex_id: int
+    filename: str
+    content_type: str
+    size_bytes: int
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+# ── REX Templates (Batch 5) ─────────────────────────
+
+class RexTemplateCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    description: str = ""
+    category: str = "lesson-learned"
+    fields_json: str = "{}"
+
+class RexTemplateOut(BaseModel):
+    id: int
+    name: str
+    description: str
+    category: str
+    fields_json: str
+    is_system: bool
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+# ── Chat Threads (Batch 7) ──────────────────────────
+
+class ChatThreadOut(BaseModel):
+    id: int
+    title: str
+    created_at: datetime
+    updated_at: datetime
+    model_config = {"from_attributes": True}
+
+class ChatMessageOut(BaseModel):
+    id: int
+    thread_id: int
+    role: str
+    content: str
+    references_json: str = "[]"
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+class ChatThreadDetail(ChatThreadOut):
+    messages: list[ChatMessageOut] = []
+
+
+# ── Endorsements (Batch 8) ──────────────────────────
+
+class EndorseIn(BaseModel):
+    skill_id: int
+
+class EndorsementOut(BaseModel):
+    id: int
+    endorser_id: int
+    endorsed_id: int
+    skill_id: int
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+class SkillEndorsementOut(BaseModel):
+    skill: SkillOut
+    count: int = 0
+    endorsed_by_me: bool = False
+
+
+# ── Badges (Batch 8) ────────────────────────────────
+
+class BadgeOut(BaseModel):
+    id: int
+    name: str
+    description: str
+    icon: str
+    criteria_type: str
+    criteria_value: int
+    model_config = {"from_attributes": True}
+
+class UserBadgeOut(BaseModel):
+    badge: BadgeOut
+    awarded_at: datetime
+
+
+# ── Collections (Batch 9) ───────────────────────────
+
+class CollectionCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=300)
+    description: str = ""
+    is_public: bool = True
+
+class CollectionUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    is_public: bool | None = None
+
+class CollectionItemAdd(BaseModel):
+    rex_id: int
+    position: int = 0
+    note: str = ""
+
+class CollectionItemOut(BaseModel):
+    id: int
+    rex_id: int
+    position: int
+    note: str
+    rex_title: str = ""
+    model_config = {"from_attributes": True}
+
+class CollectionOut(BaseModel):
+    id: int
+    title: str
+    description: str
+    is_public: bool
+    creator_id: int
+    creator_name: str = ""
+    item_count: int = 0
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+class CollectionDetail(CollectionOut):
+    items: list[CollectionItemOut] = []
+
+
+# ── Audit Log (Batch 10) ────────────────────────────
+
+class AuditLogOut(BaseModel):
+    id: int
+    user_id: int | None
+    action: str
+    entity_type: str
+    entity_id: int | None
+    details_json: str
+    ip_address: str
+    created_at: datetime
+    user_name: str = ""
+    model_config = {"from_attributes": True}
+
+class SearchLogOut(BaseModel):
+    id: int
+    user_id: int | None
+    query: str
+    results_count: int
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+class ContentHealthItem(BaseModel):
+    rex_id: int
+    title: str
+    author_name: str
+    days_since_update: int
+    view_count: int
+    vote_score: int
+    comment_count: int
+    status: str  # stale, low-engagement, orphaned-tags
+
+
+# ── Email Preferences (Batch 11) ────────────────────
+
+class EmailPreferenceOut(BaseModel):
+    weekly_digest: bool = True
+    new_from_followed: bool = True
+    saved_search_alerts: bool = True
+    model_config = {"from_attributes": True}
+
+class EmailPreferenceUpdate(BaseModel):
+    weekly_digest: bool | None = None
+    new_from_followed: bool | None = None
+    saved_search_alerts: bool | None = None
+
+
+# ── Moderation (Batch 11) ───────────────────────────
+
+class FlagIn(BaseModel):
+    reason: str = Field(min_length=1, max_length=500)
+
+class ModerationItem(BaseModel):
+    rex_id: int
+    title: str
+    author_name: str
+    flagged_reason: str | None
+    created_at: datetime
+
+
+# ── Roles (Batch 12) ────────────────────────────────
+
+class RoleCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    permissions_json: str = "[]"
+
+class RoleOut(BaseModel):
+    id: int
+    name: str
+    permissions_json: str
+    model_config = {"from_attributes": True}
+
+
+# ── Shared Links (Batch 13) ─────────────────────────
+
+class SharedLinkCreate(BaseModel):
+    expires_hours: int | None = None
+    password: str | None = None
+
+class SharedLinkOut(BaseModel):
+    id: int
+    rex_id: int
+    token: str
+    expires_at: datetime | None
+    has_password: bool = False
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+# ── Bulk Import (Batch 13) ──────────────────────────
+
+class ImportPreviewRow(BaseModel):
+    row: int
+    title: str
+    category: str
+    author_email: str
+    tags: list[str]
+    status: str  # ok, warning, error
+    message: str = ""
+
+class ImportResult(BaseModel):
+    created: int
+    skipped: int
+    errors: list[str]

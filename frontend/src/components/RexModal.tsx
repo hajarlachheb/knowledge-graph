@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { RexOut, CommentOut, castVote, getRelatedRex, getSummary, deleteRexSheet, getComments, createComment, getExportRexUrl } from "@/lib/api";
+import { RexOut, CommentOut, ReactionSummary, AttachmentOut, castVote, getRelatedRex, getSummary, deleteRexSheet, getComments, createComment, getExportRexUrl, addReaction, removeReaction, getReactions, getAttachments, getAttachmentDownloadUrl, flagRex, createShareLink } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import TagBadge from "./TagBadge";
 import BookmarkButton from "./BookmarkButton";
+import Markdown from "./Markdown";
 
 const CATEGORY_CONFIG: Record<string, { label: string; color: string }> = {
   "lesson-learned": { label: "Lesson Learned", color: "bg-blue-100 text-blue-700" },
@@ -28,6 +29,8 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
   const [score, setScore] = useState(rex.vote_score);
   const [userVote, setUserVote] = useState(rex.user_vote);
   const [voting, setVoting] = useState(false);
+  const [reactions, setReactions] = useState<ReactionSummary>({ helpful: 0, applied: 0, insightful: 0, outdated: 0, user_reactions: [] });
+  const [attachments, setAttachments] = useState<AttachmentOut[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [comments, setComments] = useState<CommentOut[]>([]);
@@ -41,9 +44,9 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
     Promise.all([getSummary(rex.id), getRelatedRex(rex.id)])
       .then(([s, r]) => { setSummary(s.summary); setRelated(r); })
       .catch(() => {});
-    getComments(rex.id)
-      .then(setComments)
-      .catch(() => {})
+    getComments(rex.id).then(setComments).catch(() => {});
+    getReactions(rex.id).then(setReactions).catch(() => {});
+    getAttachments(rex.id).then(setAttachments).catch(() => {})
       .finally(() => setLoadingComments(false));
   }, [rex.id]);
 
@@ -98,7 +101,7 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto">
       <div className="fixed inset-0 bg-black/30 backdrop-blur-[2px]" onClick={onClose} />
 
-      <div className="relative z-10 w-full max-w-3xl my-8 mx-4 bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="relative z-10 w-full max-w-3xl my-8 mx-4 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-start justify-between gap-4 p-5 pb-0">
           <div className="min-w-0 flex-1">
@@ -115,13 +118,13 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
                 {comments.length}
               </span>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 leading-tight">{rex.title}</h2>
-            <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">{rex.title}</h2>
+            <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
               <Link href={`/users/${rex.author.id}`} className="font-medium text-brand-600 hover:underline" onClick={onClose}>
                 {rex.author.full_name || rex.author.username}
               </Link>
               {rex.author.department && (
-                <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] text-gray-500">
+                <span className="rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 text-[11px] text-gray-500 dark:text-gray-400">
                   {rex.author.department.name}
                 </span>
               )}
@@ -131,7 +134,7 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center gap-1 rounded-lg border border-gray-200 px-1">
+            <div className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-700 px-1">
               <button onClick={() => handleVote(1)} disabled={voting}
                 className={`p-1 rounded transition-colors ${userVote === 1 ? "text-green-600" : "text-gray-300 hover:text-green-500"}`}>
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
@@ -155,7 +158,7 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
               href={getExportRexUrl(rex.id)}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               title="Export as Markdown"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -165,7 +168,7 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
 
             <button
               onClick={() => { navigator.clipboard.writeText(window.location.origin + `/learnings/${rex.id}`); }}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               title="Copy link"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -173,7 +176,7 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
               </svg>
             </button>
 
-            <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+            <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
               </svg>
@@ -191,31 +194,75 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
         {/* Body (scrollable) */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {summary && (
-            <div className="rounded-lg bg-purple-50/70 border border-purple-100 p-3.5">
+            <div className="rounded-lg bg-purple-50/70 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/40 p-3.5">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-purple-500 mb-1 flex items-center gap-1">
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
                 </svg>
                 TL;DR
               </p>
-              <p className="text-sm text-purple-900/80">{summary}</p>
+              <p className="text-sm text-purple-900/80 dark:text-purple-200">{summary}</p>
             </div>
           )}
 
           <section>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-red-400 mb-1.5">Problematic</h3>
-            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{rex.problematic}</p>
+            <Markdown content={rex.problematic} className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed" />
           </section>
 
           <section>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-green-500 mb-1.5">Solution</h3>
-            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{rex.solution}</p>
+            <Markdown content={rex.solution} className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed" />
           </section>
 
+          {/* Reactions */}
+          <section className="flex flex-wrap gap-2">
+            {(["helpful", "applied", "insightful", "outdated"] as const).map((type) => {
+              const isActive = reactions.user_reactions.includes(type);
+              const icons: Record<string, string> = { helpful: "👍", applied: "✅", insightful: "💡", outdated: "⏳" };
+              return (
+                <button
+                  key={type}
+                  onClick={async () => {
+                    if (isActive) { await removeReaction(rex.id, type); }
+                    else { await addReaction(rex.id, type); }
+                    getReactions(rex.id).then(setReactions).catch(() => {});
+                  }}
+                  className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs transition-colors ${
+                    isActive ? "bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-100" : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  <span>{icons[type]}</span>
+                  <span className="capitalize">{type}</span>
+                  {reactions[type] > 0 && <span className="font-semibold">{reactions[type]}</span>}
+                </button>
+              );
+            })}
+          </section>
+
+          {/* Attachments */}
+          {attachments.length > 0 && (
+            <section>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Attachments</h3>
+              <div className="space-y-1">
+                {attachments.map((att) => (
+                  <a key={att.id} href={getAttachmentDownloadUrl(att.id)} target="_blank" rel="noreferrer"
+                    className="flex items-center gap-2 rounded-lg bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-brand-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                    <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
+                    </svg>
+                    <span className="truncate">{att.filename}</span>
+                    <span className="text-[11px] text-gray-400 shrink-0">{(att.size_bytes / 1024).toFixed(0)} KB</span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
+
           {isOwner && (
-            <div className="flex gap-2 pt-2 border-t border-gray-100">
+            <div className="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
               <Link href={`/learnings/${rex.id}/edit`} onClick={onClose}
-                className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 transition-colors">
+                className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                 Edit
               </Link>
               <button onClick={handleDelete} disabled={deleting}
@@ -226,12 +273,12 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
           )}
 
           {related.length > 0 && (
-            <section className="pt-2 border-t border-gray-100">
+            <section className="pt-2 border-t border-gray-100 dark:border-gray-700">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Related REX</h3>
               <div className="flex flex-wrap gap-2">
                 {related.slice(0, 4).map((r) => (
                   <span key={r.id}
-                    className="rounded-lg bg-gray-50 border border-gray-100 px-3 py-1.5 text-xs text-gray-700 hover:border-brand-200 hover:text-brand-600 cursor-pointer transition-colors">
+                    className="rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:border-brand-200 hover:text-brand-600 cursor-pointer transition-colors">
                     {r.title}
                   </span>
                 ))}
@@ -241,7 +288,7 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
         </div>
 
         {/* Discussion */}
-        <div className="border-t border-gray-200 bg-gray-50/80 rounded-b-2xl">
+        <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-800/80 rounded-b-2xl">
           <div className="px-5 py-2.5">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-2">
               Discussion ({comments.length})
@@ -257,7 +304,7 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-xs font-medium text-gray-900">{m.author.full_name || m.author.username}</span>
+                        <span className="text-xs font-medium text-gray-900 dark:text-gray-100">{m.author.full_name || m.author.username}</span>
                         <span className="text-[10px] text-gray-400">
                           {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         </span>
@@ -265,7 +312,7 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
                           <span className="rounded bg-amber-100 px-1 text-[10px] font-medium text-amber-700">Question</span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600">{m.text}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{m.text}</p>
                     </div>
                   </div>
                 ))}
@@ -280,7 +327,7 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 placeholder="Comment or ask a question..."
-                className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:ring-1 focus:ring-brand-400/30 outline-none placeholder:text-gray-400"
+                className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm dark:text-white focus:border-brand-400 focus:ring-1 focus:ring-brand-400/30 outline-none placeholder:text-gray-400"
               />
               <button
                 type="submit"

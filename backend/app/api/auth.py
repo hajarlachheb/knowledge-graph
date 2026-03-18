@@ -53,6 +53,36 @@ async def me(current_user: User = Depends(get_current_user)):
     return _user_to_out(current_user)
 
 
+@router.post("/sso", response_model=Token)
+async def sso_login(body: dict, session: AsyncSession = Depends(get_session)):
+    """SSO/OIDC callback — receives id_token or code, validates, and returns JWT."""
+    from app.config import settings as cfg
+    if not cfg.sso_provider:
+        raise HTTPException(status_code=501, detail="SSO not configured")
+
+    email = body.get("email", "")
+    name = body.get("name", "")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email required from SSO provider")
+
+    result = await session.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        username = email.split("@")[0].replace(".", "_")
+        user = User(
+            username=username,
+            email=email,
+            password_hash="sso-no-password",
+            full_name=name or username,
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+
+    return Token(access_token=create_access_token(user.id))
+
+
 def _user_to_out(user: User) -> UserOut:
     from app.models.schemas import DepartmentOut, SkillOut
     dept = None

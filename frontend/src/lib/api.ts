@@ -488,3 +488,441 @@ export async function toggleAdmin(userId: number): Promise<{ id: number; is_admi
   });
   return handleRes<{ id: number; is_admin: boolean }>(res);
 }
+
+/* ── Reactions ─────────────────────────────────────── */
+
+export interface ReactionSummary {
+  helpful: number;
+  applied: number;
+  insightful: number;
+  outdated: number;
+  user_reactions: string[];
+}
+
+export async function addReaction(rexId: number, type: string): Promise<void> {
+  await fetch(`${BASE}/api/learnings/${rexId}/react`, {
+    method: "POST", headers: authHeaders(), body: JSON.stringify({ type }),
+  });
+}
+
+export async function removeReaction(rexId: number, type: string): Promise<void> {
+  await fetch(`${BASE}/api/learnings/${rexId}/react/${type}`, { method: "DELETE", headers: authHeaders() });
+}
+
+export async function getReactions(rexId: number): Promise<ReactionSummary> {
+  const res = await fetch(`${BASE}/api/learnings/${rexId}/reactions`, { headers: authHeaders() });
+  return handleRes<ReactionSummary>(res);
+}
+
+/* ── Saved Searches ────────────────────────────────── */
+
+export interface SavedSearchOut {
+  id: number;
+  name: string;
+  filters_json: string;
+  notify: boolean;
+  created_at: string;
+}
+
+export async function getSavedSearches(): Promise<SavedSearchOut[]> {
+  const res = await fetch(`${BASE}/api/saved-searches`, { headers: authHeaders() });
+  return handleRes<SavedSearchOut[]>(res);
+}
+
+export async function createSavedSearch(data: { name: string; filters_json: string; notify?: boolean }): Promise<SavedSearchOut> {
+  const res = await fetch(`${BASE}/api/saved-searches`, {
+    method: "POST", headers: authHeaders(), body: JSON.stringify(data),
+  });
+  return handleRes<SavedSearchOut>(res);
+}
+
+export async function deleteSavedSearch(id: number): Promise<void> {
+  await fetch(`${BASE}/api/saved-searches/${id}`, { method: "DELETE", headers: authHeaders() });
+}
+
+/* ── Attachments ───────────────────────────────────── */
+
+export interface AttachmentOut {
+  id: number;
+  rex_id: number;
+  filename: string;
+  content_type: string;
+  size_bytes: number;
+  created_at: string;
+}
+
+export async function getAttachments(rexId: number): Promise<AttachmentOut[]> {
+  const res = await fetch(`${BASE}/api/attachments/learnings/${rexId}`, { headers: authHeaders() });
+  return handleRes<AttachmentOut[]>(res);
+}
+
+export async function uploadAttachment(rexId: number, file: File): Promise<AttachmentOut> {
+  const form = new FormData();
+  form.append("file", file);
+  const token = getToken();
+  const hdrs: Record<string, string> = {};
+  if (token) hdrs["Authorization"] = `Bearer ${token}`;
+  const res = await fetch(`${BASE}/api/attachments/learnings/${rexId}/upload`, {
+    method: "POST", headers: hdrs, body: form,
+  });
+  return handleRes<AttachmentOut>(res);
+}
+
+export async function deleteAttachment(id: number): Promise<void> {
+  await fetch(`${BASE}/api/attachments/${id}`, { method: "DELETE", headers: authHeaders() });
+}
+
+export function getAttachmentDownloadUrl(id: number): string {
+  return `${BASE}/api/attachments/${id}/download`;
+}
+
+/* ── REX Templates ─────────────────────────────────── */
+
+export interface RexTemplateOut {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+  fields_json: string;
+  is_system: boolean;
+  created_at: string;
+}
+
+export async function getTemplates(): Promise<RexTemplateOut[]> {
+  const res = await fetch(`${BASE}/api/templates`, { headers: authHeaders() });
+  return handleRes<RexTemplateOut[]>(res);
+}
+
+export async function getTemplate(id: number): Promise<RexTemplateOut> {
+  const res = await fetch(`${BASE}/api/templates/${id}`, { headers: authHeaders() });
+  return handleRes<RexTemplateOut>(res);
+}
+
+export async function createTemplate(data: { name: string; description?: string; category?: string; fields_json?: string }): Promise<RexTemplateOut> {
+  const res = await fetch(`${BASE}/api/templates`, {
+    method: "POST", headers: authHeaders(), body: JSON.stringify(data),
+  });
+  return handleRes<RexTemplateOut>(res);
+}
+
+/* ── Trending ──────────────────────────────────────── */
+
+export async function getTrending(days?: number, limit?: number): Promise<RexOut[]> {
+  const sp = new URLSearchParams();
+  if (days) sp.set("days", String(days));
+  if (limit) sp.set("limit", String(limit));
+  const res = await fetch(`${BASE}/api/learnings/trending?${sp}`, { headers: authHeaders() });
+  return handleRes<RexOut[]>(res);
+}
+
+/* ── Chat Threads ──────────────────────────────────── */
+
+export interface ChatThreadOut {
+  id: number;
+  title: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChatMessageOut {
+  id: number;
+  thread_id: number;
+  role: string;
+  content: string;
+  references_json: string;
+  created_at: string;
+}
+
+export interface ChatThreadDetail extends ChatThreadOut {
+  messages: ChatMessageOut[];
+}
+
+export async function getChatThreads(): Promise<ChatThreadOut[]> {
+  const res = await fetch(`${BASE}/api/ai/threads`, { headers: authHeaders() });
+  return handleRes<ChatThreadOut[]>(res);
+}
+
+export async function getChatThread(id: number): Promise<ChatThreadDetail> {
+  const res = await fetch(`${BASE}/api/ai/threads/${id}`, { headers: authHeaders() });
+  return handleRes<ChatThreadDetail>(res);
+}
+
+export async function deleteChatThread(id: number): Promise<void> {
+  await fetch(`${BASE}/api/ai/threads/${id}`, { method: "DELETE", headers: authHeaders() });
+}
+
+export async function aiChatWithThread(question: string, threadId?: number): Promise<{ answer: string; references: { id: number; title: string; author?: string; department?: string }[]; thread_id: number }> {
+  const body: Record<string, unknown> = { question };
+  if (threadId) body.thread_id = threadId;
+  const res = await fetch(`${BASE}/api/ai/chat`, {
+    method: "POST", headers: authHeaders(), body: JSON.stringify(body),
+  });
+  return handleRes<{ answer: string; references: { id: number; title: string; author?: string; department?: string }[]; thread_id: number }>(res);
+}
+
+/* ── Endorsements ──────────────────────────────────── */
+
+export interface SkillEndorsementOut {
+  skill: SkillOut;
+  count: number;
+  endorsed_by_me: boolean;
+}
+
+export async function endorseUser(userId: number, skillId: number): Promise<void> {
+  await fetch(`${BASE}/api/users/${userId}/endorse`, {
+    method: "POST", headers: authHeaders(), body: JSON.stringify({ skill_id: skillId }),
+  });
+}
+
+export async function removeEndorsement(userId: number, skillId: number): Promise<void> {
+  await fetch(`${BASE}/api/users/${userId}/endorse/${skillId}`, { method: "DELETE", headers: authHeaders() });
+}
+
+export async function getUserEndorsements(userId: number): Promise<SkillEndorsementOut[]> {
+  const res = await fetch(`${BASE}/api/users/${userId}/endorsements`, { headers: authHeaders() });
+  return handleRes<SkillEndorsementOut[]>(res);
+}
+
+/* ── Badges ────────────────────────────────────────── */
+
+export interface BadgeOut {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  criteria_type: string;
+  criteria_value: number;
+}
+
+export interface UserBadgeOut {
+  badge: BadgeOut;
+  awarded_at: string;
+}
+
+export async function getAllBadges(): Promise<BadgeOut[]> {
+  const res = await fetch(`${BASE}/api/badges`, { headers: authHeaders() });
+  return handleRes<BadgeOut[]>(res);
+}
+
+export async function getUserBadges(userId: number): Promise<UserBadgeOut[]> {
+  const res = await fetch(`${BASE}/api/badges/users/${userId}`, { headers: authHeaders() });
+  return handleRes<UserBadgeOut[]>(res);
+}
+
+export async function checkBadges(): Promise<UserBadgeOut[]> {
+  const res = await fetch(`${BASE}/api/badges/check`, { method: "POST", headers: authHeaders() });
+  return handleRes<UserBadgeOut[]>(res);
+}
+
+/* ── Collections ───────────────────────────────────── */
+
+export interface CollectionOut {
+  id: number;
+  title: string;
+  description: string;
+  is_public: boolean;
+  creator_id: number;
+  creator_name: string;
+  item_count: number;
+  created_at: string;
+}
+
+export interface CollectionItemOut {
+  id: number;
+  rex_id: number;
+  position: number;
+  note: string;
+  rex_title: string;
+}
+
+export interface CollectionDetail extends CollectionOut {
+  items: CollectionItemOut[];
+}
+
+export async function getCollections(): Promise<CollectionOut[]> {
+  const res = await fetch(`${BASE}/api/collections`, { headers: authHeaders() });
+  return handleRes<CollectionOut[]>(res);
+}
+
+export async function getCollection(id: number): Promise<CollectionDetail> {
+  const res = await fetch(`${BASE}/api/collections/${id}`, { headers: authHeaders() });
+  return handleRes<CollectionDetail>(res);
+}
+
+export async function createCollection(data: { title: string; description?: string; is_public?: boolean }): Promise<CollectionOut> {
+  const res = await fetch(`${BASE}/api/collections`, {
+    method: "POST", headers: authHeaders(), body: JSON.stringify(data),
+  });
+  return handleRes<CollectionOut>(res);
+}
+
+export async function updateCollection(id: number, data: { title?: string; description?: string; is_public?: boolean }): Promise<CollectionOut> {
+  const res = await fetch(`${BASE}/api/collections/${id}`, {
+    method: "PUT", headers: authHeaders(), body: JSON.stringify(data),
+  });
+  return handleRes<CollectionOut>(res);
+}
+
+export async function deleteCollection(id: number): Promise<void> {
+  await fetch(`${BASE}/api/collections/${id}`, { method: "DELETE", headers: authHeaders() });
+}
+
+export async function addToCollection(collectionId: number, rexId: number, note?: string): Promise<void> {
+  await fetch(`${BASE}/api/collections/${collectionId}/items`, {
+    method: "POST", headers: authHeaders(), body: JSON.stringify({ rex_id: rexId, note: note || "" }),
+  });
+}
+
+export async function removeFromCollection(collectionId: number, itemId: number): Promise<void> {
+  await fetch(`${BASE}/api/collections/${collectionId}/items/${itemId}`, { method: "DELETE", headers: authHeaders() });
+}
+
+/* ── Compliance ────────────────────────────────────── */
+
+export async function getMandatoryRex(): Promise<RexOut[]> {
+  const res = await fetch(`${BASE}/api/compliance/mandatory`, { headers: authHeaders() });
+  return handleRes<RexOut[]>(res);
+}
+
+export async function attestRex(rexId: number): Promise<void> {
+  await fetch(`${BASE}/api/compliance/attest/${rexId}`, { method: "POST", headers: authHeaders() });
+}
+
+/* ── Moderation ────────────────────────────────────── */
+
+export async function flagRex(rexId: number, reason: string): Promise<void> {
+  await fetch(`${BASE}/api/learnings/${rexId}/flag`, {
+    method: "POST", headers: authHeaders(), body: JSON.stringify({ reason }),
+  });
+}
+
+export async function getModerationQueue(): Promise<unknown[]> {
+  const res = await fetch(`${BASE}/api/admin/moderation`, { headers: authHeaders() });
+  return handleRes<unknown[]>(res);
+}
+
+export async function approveRex(rexId: number): Promise<void> {
+  await fetch(`${BASE}/api/admin/moderation/${rexId}/approve`, { method: "POST", headers: authHeaders() });
+}
+
+export async function rejectRex(rexId: number): Promise<void> {
+  await fetch(`${BASE}/api/admin/moderation/${rexId}/reject`, { method: "POST", headers: authHeaders() });
+}
+
+/* ── Roles ─────────────────────────────────────────── */
+
+export interface RoleOut {
+  id: number;
+  name: string;
+  permissions_json: string;
+}
+
+export async function getRoles(): Promise<RoleOut[]> {
+  const res = await fetch(`${BASE}/api/admin/roles`, { headers: authHeaders() });
+  return handleRes<RoleOut[]>(res);
+}
+
+export async function createRole(data: { name: string; permissions_json?: string }): Promise<RoleOut> {
+  const res = await fetch(`${BASE}/api/admin/roles`, {
+    method: "POST", headers: authHeaders(), body: JSON.stringify(data),
+  });
+  return handleRes<RoleOut>(res);
+}
+
+export async function assignRole(userId: number, roleId: number): Promise<void> {
+  await fetch(`${BASE}/api/admin/roles/assign/${userId}/${roleId}`, { method: "POST", headers: authHeaders() });
+}
+
+/* ── Shared Links ──────────────────────────────────── */
+
+export interface SharedLinkOut {
+  id: number;
+  rex_id: number;
+  token: string;
+  expires_at: string | null;
+  has_password: boolean;
+  created_at: string;
+}
+
+export async function createShareLink(rexId: number, expiresHours?: number, password?: string): Promise<SharedLinkOut> {
+  const body: Record<string, unknown> = {};
+  if (expiresHours) body.expires_hours = expiresHours;
+  if (password) body.password = password;
+  const res = await fetch(`${BASE}/api/shared/learnings/${rexId}`, {
+    method: "POST", headers: authHeaders(), body: JSON.stringify(body),
+  });
+  return handleRes<SharedLinkOut>(res);
+}
+
+export async function getSharedRex(token: string, password?: string): Promise<RexOut> {
+  const sp = password ? `?password=${encodeURIComponent(password)}` : "";
+  const res = await fetch(`${BASE}/api/shared/${token}${sp}`);
+  return handleRes<RexOut>(res);
+}
+
+/* ── Email Preferences ─────────────────────────────── */
+
+export interface EmailPreferenceOut {
+  weekly_digest: boolean;
+  new_from_followed: boolean;
+  saved_search_alerts: boolean;
+}
+
+export async function getEmailPreferences(): Promise<EmailPreferenceOut> {
+  const res = await fetch(`${BASE}/api/users/me/email-preferences`, { headers: authHeaders() });
+  return handleRes<EmailPreferenceOut>(res);
+}
+
+export async function updateEmailPreferences(data: Partial<EmailPreferenceOut>): Promise<EmailPreferenceOut> {
+  const res = await fetch(`${BASE}/api/users/me/email-preferences`, {
+    method: "PUT", headers: authHeaders(), body: JSON.stringify(data),
+  });
+  return handleRes<EmailPreferenceOut>(res);
+}
+
+/* ── Admin Analytics ───────────────────────────────── */
+
+export async function getAdminAnalytics(): Promise<unknown> {
+  const res = await fetch(`${BASE}/api/admin/analytics`, { headers: authHeaders() });
+  return handleRes<unknown>(res);
+}
+
+export async function getAdminAuditLog(params?: { page?: number; action?: string; user_id?: number }): Promise<unknown[]> {
+  const sp = new URLSearchParams();
+  if (params?.page) sp.set("page", String(params.page));
+  if (params?.action) sp.set("action", params.action);
+  if (params?.user_id) sp.set("user_id", String(params.user_id));
+  const res = await fetch(`${BASE}/api/admin/audit-log?${sp}`, { headers: authHeaders() });
+  return handleRes<unknown[]>(res);
+}
+
+export async function getContentHealth(): Promise<unknown[]> {
+  const res = await fetch(`${BASE}/api/admin/content-health`, { headers: authHeaders() });
+  return handleRes<unknown[]>(res);
+}
+
+/* ── Bulk Import ───────────────────────────────────── */
+
+export function getImportTemplateUrl(): string {
+  return `${BASE}/api/admin/import/template`;
+}
+
+export async function importPreview(file: File): Promise<unknown[]> {
+  const form = new FormData();
+  form.append("file", file);
+  const token = getToken();
+  const hdrs: Record<string, string> = {};
+  if (token) hdrs["Authorization"] = `Bearer ${token}`;
+  const res = await fetch(`${BASE}/api/admin/import/preview`, { method: "POST", headers: hdrs, body: form });
+  return handleRes<unknown[]>(res);
+}
+
+export async function importExecute(file: File): Promise<{ created: number; skipped: number; errors: string[] }> {
+  const form = new FormData();
+  form.append("file", file);
+  const token = getToken();
+  const hdrs: Record<string, string> = {};
+  if (token) hdrs["Authorization"] = `Bearer ${token}`;
+  const res = await fetch(`${BASE}/api/admin/import/execute`, { method: "POST", headers: hdrs, body: form });
+  return handleRes<{ created: number; skipped: number; errors: string[] }>(res);
+}

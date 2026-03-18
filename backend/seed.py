@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from app.db.postgres import engine, async_session
 from app.db.models import (
-    Base, Department, User, Skill, UserSkill, RexSheet, Tag, RexTag,
+    Base, Badge, Department, RexTemplate, Role, User, Skill, UserSkill, RexSheet, Tag, RexTag,
     Bookmark, Vote, Comment, Follow, RexView, Notification,
 )
 from app.auth import hash_password
@@ -260,9 +260,51 @@ async def seed():
         session.add(Bookmark(user_id=user_map["s.nguyen"], rex_id=rex_id_map[12]))
         session.add(Bookmark(user_id=user_map["c.dubois"], rex_id=rex_id_map[11]))
 
+        # ── Badges ─────────────────────────────────────────────
+        BADGES = [
+            Badge(name="First REX", description="Published your first REX sheet", icon="star", criteria_type="rex_count", criteria_value=1),
+            Badge(name="10 REX", description="Published 10 REX sheets", icon="fire", criteria_type="rex_count", criteria_value=10),
+            Badge(name="50 REX", description="Published 50 REX sheets", icon="trophy", criteria_type="rex_count", criteria_value=50),
+            Badge(name="Top Contributor", description="Received 50+ total votes", icon="crown", criteria_type="vote_count", criteria_value=50),
+            Badge(name="Helpful", description="Received 10 helpful reactions", icon="heart", criteria_type="reaction_count", criteria_value=10),
+            Badge(name="Streak 7", description="Published REX sheets 7 days in a row", icon="lightning", criteria_type="streak", criteria_value=7),
+            Badge(name="Top Voter", description="Cast 50+ votes", icon="thumbs-up", criteria_type="votes_cast", criteria_value=50),
+        ]
+        for badge in BADGES:
+            session.add(badge)
+
+        # ── Roles ─────────────────────────────────────────────
+        ROLES = [
+            Role(name="Viewer", permissions_json='["view_rex"]'),
+            Role(name="Contributor", permissions_json='["view_rex","create_rex","comment","vote"]'),
+            Role(name="Department Editor", permissions_json='["view_rex","create_rex","edit_any_rex","comment","vote"]'),
+            Role(name="Reviewer", permissions_json='["view_rex","create_rex","comment","vote","moderate"]'),
+            Role(name="Admin", permissions_json='["view_rex","create_rex","edit_any_rex","delete_any_rex","manage_users","moderate","view_analytics"]'),
+        ]
+        for role in ROLES:
+            session.add(role)
+
+        # ── REX Templates ────────────────────────────────────
+        TEMPLATES = [
+            RexTemplate(name="VAT Audit", description="Template for VAT audit findings and remediation", category="lesson-learned", is_system=True,
+                        fields_json='{"problematic_hint":"Describe the VAT issue discovered during the audit...","solution_hint":"Explain the remediation steps taken..."}'),
+            RexTemplate(name="Transfer Pricing Analysis", description="Document transfer pricing methodology and outcomes", category="technical-guide", is_system=True,
+                        fields_json='{"problematic_hint":"Describe the transfer pricing challenge or dispute...","solution_hint":"Document the methodology and resolution..."}'),
+            RexTemplate(name="Project Post-Mortem", description="Capture lessons from completed projects", category="lesson-learned", is_system=True,
+                        fields_json='{"problematic_hint":"What went wrong or what challenges were faced...","solution_hint":"What would you do differently next time..."}'),
+            RexTemplate(name="Process Improvement", description="Document process optimization initiatives", category="process-improvement", is_system=True,
+                        fields_json='{"problematic_hint":"Describe the inefficient process...","solution_hint":"Explain the improved process and its benefits..."}'),
+            RexTemplate(name="Compliance Review", description="Record compliance findings and corrective actions", category="best-practice", is_system=True,
+                        fields_json='{"problematic_hint":"Describe the compliance gap or violation...","solution_hint":"Document the corrective actions and controls..."}'),
+            RexTemplate(name="Technical Guide", description="Step-by-step technical documentation", category="technical-guide", is_system=True,
+                        fields_json='{"problematic_hint":"What technical problem needs solving...","solution_hint":"Provide step-by-step instructions..."}'),
+        ]
+        for tmpl in TEMPLATES:
+            session.add(tmpl)
+
         await session.commit()
 
-    print("Seeded Knowledia (Finance/Tax/PMO) with:")
+    print("Seeded Knowledgia (Finance/Tax/PMO) with:")
     print(f"  {len(DEPARTMENTS)} departments")
     print(f"  {len(SKILLS)} skills")
     print(f"  {len(USERS)} employees (1 admin: n.fontaine)")

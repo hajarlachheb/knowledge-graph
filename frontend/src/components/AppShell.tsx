@@ -5,9 +5,14 @@ import { useAuth } from "@/lib/AuthContext";
 import { SidebarProvider, useSidebar } from "@/lib/SidebarContext";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import Sidebar from "./Sidebar";
+import CmdPalette from "./CmdPalette";
 import { useEffect } from "react";
 
 const PUBLIC_PATHS = ["/", "/login", "/register"];
+
+function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/shared");
+}
 
 function AppShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -16,14 +21,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const { collapsed, setMobileOpen } = useSidebar();
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  const isPublicPage = PUBLIC_PATHS.includes(pathname);
+  const isPublicPage = isPublicPath(pathname);
 
   useEffect(() => {
     if (loading) return;
     if (!user && !isPublicPage) {
       router.replace("/");
     }
-    if (user && isPublicPage) {
+    if (user && (pathname === "/" || pathname === "/login" || pathname === "/register")) {
       router.replace("/dashboard");
     }
   }, [user, loading, isPublicPage, router, pathname]);
@@ -45,14 +50,15 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const mainMarginLeft = isDesktop ? (collapsed ? 68 : 240) : 0;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50/50">
+    <div className="flex h-screen overflow-hidden bg-gray-50/50 dark:bg-gray-900">
       <Sidebar />
+      <CmdPalette />
       {/* Mobile: hamburger to open sidebar */}
       {!isDesktop && (
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
-          className="fixed top-4 left-4 z-30 flex h-10 w-10 items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 shadow-sm hover:bg-gray-50 md:hidden"
+          className="fixed top-4 left-4 z-30 flex h-10 w-10 items-center justify-center rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 md:hidden"
           aria-label="Open menu"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">

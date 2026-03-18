@@ -83,11 +83,11 @@ export default function ProfilePage() {
   };
 
   if (loading) return <div className="flex justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" /></div>;
-  if (!profile) return <p className="text-center py-20 text-gray-500">User not found</p>;
+  if (!profile) return <p className="text-center py-20 text-gray-500 dark:text-gray-400">User not found</p>;
 
   return (
     <div className="w-full min-w-0">
-      <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6 mb-6 sm:mb-8">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-6 mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row items-start gap-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-100 text-2xl font-bold text-brand-700">
             {(profile.full_name || profile.username).charAt(0).toUpperCase()}
@@ -95,7 +95,7 @@ export default function ProfilePage() {
           <div className="flex-1 min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 min-w-0">
               <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
                   {profile.full_name || profile.username}
                   {profile.is_trusted && (
                     <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Trusted</span>
@@ -106,14 +106,14 @@ export default function ProfilePage() {
               <div className="flex gap-2 shrink-0">
                 {isOwnProfile ? (
                   <button onClick={startEditing}
-                    className="rounded-lg border border-gray-200 px-3 py-1.5 text-[13px] text-gray-600 hover:bg-gray-50 transition-colors">
+                    className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[13px] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     Edit Profile
                   </button>
                 ) : (
                   <button onClick={handleFollow} disabled={followLoading}
                     className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors ${
                       isFollowed
-                        ? "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                        ? "border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                         : "bg-brand-600 text-white hover:bg-brand-700"
                     }`}>
                     {isFollowed ? "Following" : "Follow"}
@@ -121,9 +121,9 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-gray-500">
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
               {profile.department && (
-                <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">{profile.department.name}</span>
+                <span className="rounded bg-gray-100 dark:bg-gray-800/50 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300">{profile.department.name}</span>
               )}
               <span>{profile.rex_count} REX</span>
               <span>{profile.follower_count} followers</span>
@@ -135,67 +135,67 @@ export default function ProfilePage() {
         </div>
 
         {profile.skills.length > 0 && (
-          <div className="mt-4 border-t border-gray-100 pt-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Skills</h3>
+          <div className="mt-4 border-t border-gray-100 dark:border-gray-700 pt-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Skills</h3>
             <div className="flex flex-wrap gap-1.5">
               {profile.skills.map((s) => (
-                <span key={s.id} className="rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">{s.name}</span>
+                <span key={s.id} className="rounded-full bg-green-50 dark:bg-green-900/30 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:text-green-300">{s.name}</span>
               ))}
             </div>
           </div>
         )}
 
-        {profile.bio && <p className="mt-4 text-sm text-gray-500 border-t border-gray-100 pt-4">{profile.bio}</p>}
+        {profile.bio && <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-4">{profile.bio}</p>}
       </div>
 
       {/* Edit Profile Modal */}
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black/30 backdrop-blur-[2px]" onClick={() => setEditing(false)} />
-          <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Edit Profile</h2>
+          <div className="relative z-10 w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Edit Profile</h2>
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-medium text-gray-600">Full Name</label>
+                <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Full Name</label>
                 <input value={editForm.full_name} onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-500 outline-none" />
+                  className="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500 outline-none" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600">Position</label>
+                <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Position</label>
                 <input value={editForm.position} onChange={(e) => setEditForm({ ...editForm, position: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-500 outline-none" />
+                  className="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500 outline-none" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600">Bio</label>
+                <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Bio</label>
                 <textarea value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} rows={3}
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-500 outline-none" />
+                  className="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500 outline-none" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600">Department</label>
+                <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Department</label>
                 <select value={editForm.department_id} onChange={(e) => setEditForm({ ...editForm, department_id: Number(e.target.value) })}
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-500 outline-none">
+                  className="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500 outline-none">
                   <option value={0}>None</option>
                   {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600">Skills (comma-separated)</label>
+                <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Skills (comma-separated)</label>
                 <input value={editSkills} onChange={(e) => setEditSkills(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-500 outline-none"
+                  className="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-brand-500 outline-none"
                   placeholder="e.g. Corporate Tax, Python, IFRS" />
               </div>
             </div>
             <div className="flex gap-2 mt-5 justify-end">
-              <button onClick={() => setEditing(false)} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+              <button onClick={() => setEditing(false)} className="rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">Cancel</button>
               <button onClick={saveProfile} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">Save</button>
             </div>
           </div>
         </div>
       )}
 
-      <h2 className="text-base font-semibold text-gray-900 mb-3">REX Sheets</h2>
+      <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3">REX Sheets</h2>
       {sheets.length === 0 ? (
-        <p className="text-gray-400 text-sm">No REX sheets published yet.</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm">No REX sheets published yet.</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">{sheets.map((r) => <RexCard key={r.id} rex={r} onBookmarkChange={fetchData} />)}</div>
       )}

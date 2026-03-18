@@ -174,8 +174,8 @@ export default function GraphPage() {
     <div className="w-full min-w-0">
       <div className="mb-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Knowledge Graph</h1>
-          <p className="mt-1 text-gray-500">Node size reflects contribution score — bigger circle = more trusted contributor</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Knowledge Graph</h1>
+          <p className="mt-1 text-gray-500 dark:text-gray-400">Node size reflects contribution score — bigger circle = more trusted contributor</p>
         </div>
         <div className="flex gap-2">
           {[
@@ -184,27 +184,27 @@ export default function GraphPage() {
             { key: "people-skills", label: "Skills" },
             { key: "knowledge", label: "Knowledge" },
           ].map((f) => (
-            <button key={f.key} onClick={() => setFilter(f.key)} className={`rounded-full px-3 py-1 text-sm border transition-colors ${filter === f.key ? "bg-brand-600 text-white border-brand-600" : "border-gray-200 text-gray-600 hover:border-brand-500"}`}>
+            <button key={f.key} onClick={() => setFilter(f.key)} className={`rounded-full px-3 py-1 text-sm border transition-colors ${filter === f.key ? "bg-brand-600 text-white border-brand-600" : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-brand-500"}`}>
               {f.label}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-4 text-xs">
+      <div className="mb-4 flex flex-wrap gap-4 text-xs text-gray-700 dark:text-gray-300">
         {Object.entries(NODE_COLORS).map(([type, c]) => (
           <span key={type} className="flex items-center gap-1.5">
             <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: c.border }} />
             {type.charAt(0).toUpperCase() + type.slice(1)}
           </span>
         ))}
-        <span className="flex items-center gap-1.5 text-yellow-600">
+        <span className="flex items-center gap-1.5 text-yellow-600 dark:text-yellow-500">
           <span className="inline-block h-3 w-3 rounded-sm bg-yellow-400" />
           Trusted contributor (golden border + star)
         </span>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white min-h-[300px]" style={{ height: "70vh" }}>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 min-h-[300px]" style={{ height: "70vh" }}>
         <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} fitView attributionPosition="bottom-left">
           <Background />
           <Controls />

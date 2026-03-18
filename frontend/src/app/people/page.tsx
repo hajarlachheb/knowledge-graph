@@ -32,20 +32,20 @@ function PeopleContent() {
   return (
     <div className="w-full min-w-0">
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
           {activeDept ? activeDept.name : "People"}
         </h1>
-        <p className="mt-1 text-gray-500">
+        <p className="mt-1 text-gray-500 dark:text-gray-400">
           {activeDept ? activeDept.description : "Discover who knows what in the organization"}
         </p>
       </div>
 
       <div className="mb-6 flex flex-wrap gap-2">
-        <Link href="/people" className={`rounded-full px-3 py-1 text-sm border transition-colors ${!deptFilter ? "bg-brand-600 text-white border-brand-600" : "border-gray-200 text-gray-600 hover:border-brand-500"}`}>
+        <Link href="/people" className={`rounded-full px-3 py-1 text-sm border transition-colors ${!deptFilter ? "bg-brand-600 text-white border-brand-600" : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-brand-500"}`}>
           All
         </Link>
         {departments.map((d) => (
-          <Link key={d.id} href={`/people?dept=${d.id}`} className={`rounded-full px-3 py-1 text-sm border transition-colors ${Number(deptFilter) === d.id ? "bg-brand-600 text-white border-brand-600" : "border-gray-200 text-gray-600 hover:border-brand-500"}`}>
+          <Link key={d.id} href={`/people?dept=${d.id}`} className={`rounded-full px-3 py-1 text-sm border transition-colors ${Number(deptFilter) === d.id ? "bg-brand-600 text-white border-brand-600" : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-brand-500"}`}>
             {d.name} ({d.member_count})
           </Link>
         ))}
@@ -56,25 +56,25 @@ function PeopleContent() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {users.map((u) => (
-            <Link key={u.id} href={`/users/${u.id}`} className="rounded-xl border border-gray-200 bg-white p-4 hover:shadow-md transition-shadow">
+            <Link key={u.id} href={`/users/${u.id}`} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">
                   {(u.full_name || u.username).charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-semibold text-gray-900 truncate">{u.full_name || u.username}</p>
-                  <p className="text-xs text-gray-500 truncate">{u.position}</p>
+                  <p className="font-semibold text-gray-900 dark:text-white truncate">{u.full_name || u.username}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{u.position}</p>
                 </div>
               </div>
               {u.department && (
-                <p className="mt-2 text-xs text-gray-400">{u.department.name}</p>
+                <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">{u.department.name}</p>
               )}
               {u.skills.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
                   {u.skills.slice(0, 4).map((s) => (
-                    <span key={s.id} className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-700">{s.name}</span>
+                    <span key={s.id} className="rounded-full bg-green-50 dark:bg-green-900/30 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:text-green-300">{s.name}</span>
                   ))}
-                  {u.skills.length > 4 && <span className="text-[10px] text-gray-400">+{u.skills.length - 4}</span>}
+                  {u.skills.length > 4 && <span className="text-[10px] text-gray-400 dark:text-gray-500">+{u.skills.length - 4}</span>}
                 </div>
               )}
             </Link>

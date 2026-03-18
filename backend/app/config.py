@@ -18,11 +18,27 @@ class Settings(BaseSettings):
 
     log_level: str = "INFO"
 
-    # LLM configuration — set LLM_PROVIDER to "grok", "openai", or "none" (heuristic fallback)
+    # LLM configuration — set LLM_PROVIDER to "grok", "openai", "llama", "ollama", or "none"
     llm_provider: str = "none"
     llm_api_key: str = ""
     llm_model: str = ""
     llm_base_url: str = ""
+
+    # Email (SMTP)
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = "noreply@knowledgia.app"
+
+    # SSO / OIDC
+    sso_provider: str = ""  # "oidc" or empty
+    sso_client_id: str = ""
+    sso_client_secret: str = ""
+    sso_discovery_url: str = ""
+
+    # Slack
+    slack_webhook_url: str = ""
 
 
 settings = Settings()

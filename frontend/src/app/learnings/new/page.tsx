@@ -13,8 +13,8 @@ export default function NewRexPage() {
 
   return (
     <div className="w-full max-w-2xl min-w-0 mx-auto px-1 lg:max-w-3xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">New REX Sheet</h1>
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">New REX Sheet</h1>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
         <LearningForm
           submitLabel="Publish REX"
           onSubmit={async (data) => {
