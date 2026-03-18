@@ -5,6 +5,8 @@ import Link from "next/link";
 import { getDashboard, getLeaderboard, getTrending, getMandatoryRex, DashboardData, ContributorOut, RexOut } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import RexCard from "@/components/LearningCard";
+import UserProfileDialog from "@/components/UserProfileDialog";
+import NewRexDialog from "@/components/NewRexDialog";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -13,6 +15,8 @@ export default function DashboardPage() {
   const [trending, setTrending] = useState<RexOut[]>([]);
   const [mandatory, setMandatory] = useState<RexOut[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profileUserId, setProfileUserId] = useState<number | null>(null);
+  const [showNewRex, setShowNewRex] = useState(false);
 
   useEffect(() => {
     Promise.all([getDashboard(), getLeaderboard(), getTrending(7, 5), getMandatoryRex()])
@@ -80,12 +84,12 @@ export default function DashboardPage() {
           <section>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-semibold text-gray-900 dark:text-white">My REX Sheets</h2>
-              <Link href={`/users/${user.id}`} className="text-xs text-brand-600 hover:underline">View all</Link>
+              <button onClick={() => setProfileUserId(user.id)} className="text-xs text-brand-600 hover:underline">View all</button>
             </div>
             {data.my_rex_sheets.length === 0 ? (
               <div className="rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 py-8 text-center">
                 <p className="text-gray-400 text-sm">No REX sheets yet</p>
-                <Link href="/learnings/new" className="mt-1 inline-block text-sm text-brand-600 dark:text-brand-400 hover:underline font-medium">Write your first one</Link>
+                <button onClick={() => setShowNewRex(true)} className="mt-1 inline-block text-sm text-brand-600 dark:text-brand-400 hover:underline font-medium">Write your first one</button>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
@@ -122,7 +126,7 @@ export default function DashboardPage() {
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
                 {leaders.slice(0, 6).map((c, i) => (
-                  <Link key={c.id} href={`/users/${c.id}`}
+                  <button key={c.id} onClick={() => setProfileUserId(c.id)}
                     className="rounded-xl border border-gray-200/80 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 hover:shadow-md transition-shadow text-center relative">
                     {i < 3 && (
                       <span className={`absolute -top-1.5 -right-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow text-white ${
@@ -142,7 +146,7 @@ export default function DashboardPage() {
                     {c.top_tags.length > 0 && (
                       <p className="text-[10px] text-gray-400 truncate mt-0.5">{c.top_tags[0]}</p>
                     )}
-                  </Link>
+                  </button>
                 ))}
               </div>
             </section>
@@ -174,6 +178,13 @@ export default function DashboardPage() {
             </section>
           )}
         </div>
+      )}
+
+      {profileUserId !== null && (
+        <UserProfileDialog userId={profileUserId} onClose={() => setProfileUserId(null)} />
+      )}
+      {showNewRex && (
+        <NewRexDialog onClose={() => setShowNewRex(false)} />
       )}
     </div>
   );

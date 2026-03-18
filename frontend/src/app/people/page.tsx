@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getUsers, getDepartments, UserOut, DepartmentOut } from "@/lib/api";
+import UserProfileDialog from "@/components/UserProfileDialog";
 
 function PeopleContent() {
   const searchParams = useSearchParams();
@@ -12,6 +13,7 @@ function PeopleContent() {
   const [users, setUsers] = useState<UserOut[]>([]);
   const [departments, setDepartments] = useState<DepartmentOut[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profileUserId, setProfileUserId] = useState<number | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -56,7 +58,7 @@ function PeopleContent() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {users.map((u) => (
-            <Link key={u.id} href={`/users/${u.id}`} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:shadow-md transition-shadow">
+            <button key={u.id} onClick={() => setProfileUserId(u.id)} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:shadow-md transition-shadow text-left w-full">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">
                   {(u.full_name || u.username).charAt(0).toUpperCase()}
@@ -77,8 +79,11 @@ function PeopleContent() {
                   {u.skills.length > 4 && <span className="text-[10px] text-gray-400 dark:text-gray-500">+{u.skills.length - 4}</span>}
                 </div>
               )}
-            </Link>
+            </button>
           ))}
+          {profileUserId !== null && (
+            <UserProfileDialog userId={profileUserId} onClose={() => setProfileUserId(null)} />
+          )}
         </div>
       )}
     </div>

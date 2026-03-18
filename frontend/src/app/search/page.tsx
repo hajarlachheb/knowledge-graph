@@ -4,6 +4,7 @@ import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { aiSearch, whoKnows, aiChatWithThread, getChatThreads, getChatThread, deleteChatThread, RexOut, WhoKnowsResult, ChatThreadOut } from "@/lib/api";
 import RexCard from "@/components/LearningCard";
+import UserProfileDialog from "@/components/UserProfileDialog";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -13,6 +14,7 @@ interface ChatMessage {
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
+  const [profileUserId, setProfileUserId] = useState<number | null>(null);
   const [results, setResults] = useState<RexOut[]>([]);
   const [experts, setExperts] = useState<WhoKnowsResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -213,7 +215,7 @@ export default function SearchPage() {
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {experts.slice(0, 6).map((e) => (
-                  <Link key={e.id} href={`/users/${e.id}`} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:shadow-md transition-shadow">
+                  <button key={e.id} onClick={() => setProfileUserId(e.id)} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:shadow-md transition-shadow text-left w-full">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-sm font-bold text-green-700">
                         {e.full_name.charAt(0).toUpperCase()}
@@ -230,7 +232,7 @@ export default function SearchPage() {
                       ))}
                     </div>
                     <p className="mt-2 text-[10px] text-gray-400">{e.rex_count} REX sheets &middot; Relevance: {e.relevance_score}</p>
-                  </Link>
+                  </button>
                 ))}
               </div>
             </section>
@@ -260,6 +262,10 @@ export default function SearchPage() {
           </svg>
           <p>Search for REX sheets, find experts, or ask the AI assistant</p>
         </div>
+      )}
+
+      {profileUserId !== null && (
+        <UserProfileDialog userId={profileUserId} onClose={() => setProfileUserId(null)} />
       )}
     </div>
   );

@@ -9,6 +9,8 @@ import { useMediaQuery } from "@/lib/useMediaQuery";
 import { getUnreadCount, markAllNotificationsRead, getNotifications, getActivity, NotificationOut, ActivityItem } from "@/lib/api";
 import KnowledgiaLogo from "@/components/KnowledgiaLogo";
 import { useTheme } from "@/lib/ThemeContext";
+import NewRexDialog from "@/components/NewRexDialog";
+import UserProfileDialog from "@/components/UserProfileDialog";
 
 const NAV_SECTIONS = [
   {
@@ -79,6 +81,8 @@ export default function Sidebar() {
   const [notifTab, setNotifTab] = useState<"notifs" | "activity">("notifs");
   const [notifs, setNotifs] = useState<NotificationOut[]>([]);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [showNewRex, setShowNewRex] = useState(false);
+  const [profileUserId, setProfileUserId] = useState<number | null>(null);
 
   const closeMobile = () => setMobileOpen(false);
 
@@ -199,9 +203,9 @@ export default function Sidebar() {
                   activity.slice(0, 30).map((item) => (
                     <div key={item.id} className="px-4 py-2.5 border-b border-gray-50 last:border-b-0 hover:bg-gray-50/80 transition-colors">
                       <p className="text-[13px] text-gray-700">
-                        <Link href={`/users/${item.actor_id}`} onClick={() => setShowNotifs(false)} className="font-medium text-gray-900 hover:text-brand-600">
+                        <button onClick={() => { setShowNotifs(false); setProfileUserId(item.actor_id); }} className="font-medium text-gray-900 hover:text-brand-600">
                           {item.actor_name}
-                        </Link>{" "}{item.message}
+                        </button>{" "}{item.message}
                       </p>
                       {item.rex_title && (
                         <p className="text-[12px] text-brand-600 font-medium mt-0.5 truncate">{item.rex_title}</p>
@@ -220,10 +224,10 @@ export default function Sidebar() {
 
       {/* New REX CTA */}
       <div className={`px-3 mb-1 ${collapsed ? "px-2" : ""}`}>
-<Link
-                href="/learnings/new"
-                onClick={closeMobile}
-                className={`flex items-center justify-center gap-2 rounded-lg bg-brand-600 text-white text-[13px] font-medium hover:bg-brand-700 transition-colors ${
+        <button
+          type="button"
+          onClick={() => { closeMobile(); setShowNewRex(true); }}
+          className={`flex items-center justify-center gap-2 rounded-lg bg-brand-600 text-white text-[13px] font-medium hover:bg-brand-700 transition-colors ${
             collapsed ? "h-9 w-full" : "px-3 py-2 w-full"
           }`}
         >
@@ -231,7 +235,7 @@ export default function Sidebar() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
           {!collapsed && <span>New REX</span>}
-        </Link>
+        </button>
       </div>
 
       {/* Navigation */}
@@ -326,10 +330,10 @@ export default function Sidebar() {
 
       {/* User + bottom actions */}
       <div className="border-t border-gray-100 dark:border-gray-700 p-3">
-        <Link
-          href={`/users/${user.id}`}
-          onClick={closeMobile}
-          className={`flex items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+        <button
+          type="button"
+          onClick={() => { closeMobile(); setProfileUserId(user.id); }}
+          className={`flex items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full ${
             collapsed ? "justify-center" : ""
           }`}
         >
@@ -337,7 +341,7 @@ export default function Sidebar() {
             {(user.full_name || user.username).charAt(0).toUpperCase()}
           </span>
           {!collapsed && (
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 text-left">
               <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate">
                 {user.full_name || user.username}
               </p>
@@ -346,7 +350,7 @@ export default function Sidebar() {
               </p>
             </div>
           )}
-        </Link>
+        </button>
 
         {/* Settings · Dark mode · Sign out */}
         <div className={`mt-1.5 flex items-center ${collapsed ? "flex-col gap-1" : "gap-0.5"}`}>
@@ -402,6 +406,13 @@ export default function Sidebar() {
         />
       )}
       {sidebarContent}
+
+      {showNewRex && (
+        <NewRexDialog onClose={() => setShowNewRex(false)} />
+      )}
+      {profileUserId !== null && (
+        <UserProfileDialog userId={profileUserId} onClose={() => setProfileUserId(null)} />
+      )}
     </>
   );
 }

@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/AuthContext";
 import TagBadge from "./TagBadge";
 import BookmarkButton from "./BookmarkButton";
 import Markdown from "./Markdown";
+import UserProfileDialog from "./UserProfileDialog";
 
 const CATEGORY_CONFIG: Record<string, { label: string; color: string }> = {
   "lesson-learned": { label: "Lesson Learned", color: "bg-blue-100 text-blue-700" },
@@ -35,6 +36,7 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
   const [chatInput, setChatInput] = useState("");
   const [comments, setComments] = useState<CommentOut[]>([]);
   const [loadingComments, setLoadingComments] = useState(true);
+  const [showAuthorProfile, setShowAuthorProfile] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const isOwner = user?.id === rex.author.id;
@@ -120,9 +122,9 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
             </div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">{rex.title}</h2>
             <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-              <Link href={`/users/${rex.author.id}`} className="font-medium text-brand-600 hover:underline" onClick={onClose}>
+              <button onClick={() => setShowAuthorProfile(true)} className="font-medium text-brand-600 hover:underline">
                 {rex.author.full_name || rex.author.username}
-              </Link>
+              </button>
               {rex.author.department && (
                 <span className="rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 text-[11px] text-gray-500 dark:text-gray-400">
                   {rex.author.department.name}
@@ -342,6 +344,10 @@ export default function RexModal({ rex, onClose, onDeleted }: Props) {
           </div>
         </div>
       </div>
+
+      {showAuthorProfile && (
+        <UserProfileDialog userId={rex.author.id} onClose={() => setShowAuthorProfile(false)} />
+      )}
     </div>
   );
 }
