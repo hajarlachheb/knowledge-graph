@@ -171,10 +171,10 @@ export default function GraphPage() {
   if (loading) return <div className="flex justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" /></div>;
 
   return (
-    <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Knowledge Graph</h1>
+    <div className="w-full min-w-0">
+      <div className="mb-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Knowledge Graph</h1>
           <p className="mt-1 text-gray-500">Node size reflects contribution score — bigger circle = more trusted contributor</p>
         </div>
         <div className="flex gap-2">
@@ -204,7 +204,7 @@ export default function GraphPage() {
         </span>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white" style={{ height: "70vh" }}>
+      <div className="rounded-xl border border-gray-200 bg-white min-h-[300px]" style={{ height: "70vh" }}>
         <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} fitView attributionPosition="bottom-left">
           <Background />
           <Controls />

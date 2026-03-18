@@ -58,28 +58,28 @@ export default function SearchPage() {
   };
 
   return (
-    <div>
-      <div className="mb-8 text-center">
+    <div className="w-full min-w-0">
+      <div className="mb-6 sm:mb-8 text-center px-1">
         <div className="inline-flex items-center gap-2 text-purple-600 mb-2">
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" />
           </svg>
           <span className="text-sm font-semibold uppercase tracking-wider">AI-Powered</span>
         </div>
-        <h1 className="text-3xl font-bold text-gray-900">Ask Knowledia</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Ask Knowledia</h1>
         <p className="mt-1 text-gray-500">Search the knowledge base or ask questions in plain language</p>
       </div>
 
-      <form onSubmit={handleSearch} className="mb-8 mx-auto max-w-2xl">
+      <form onSubmit={handleSearch} className="mb-6 sm:mb-8 mx-auto max-w-2xl w-full px-1">
         <div className="relative">
-          <svg className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <svg className="absolute left-3 sm:left-4 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
           </svg>
           <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
             placeholder="Search REX sheets and find experts..."
-            className="w-full rounded-2xl border border-gray-200 bg-white py-4 pl-12 pr-24 text-base shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none" />
+            className="w-full rounded-2xl border border-gray-200 bg-white py-3 sm:py-4 pl-10 sm:pl-12 pr-20 sm:pr-24 text-sm sm:text-base shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none" />
           <button type="submit" disabled={searching}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl bg-purple-600 px-5 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50 transition-colors">
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl bg-purple-600 px-3 sm:px-5 py-1.5 sm:py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50 transition-colors">
             {searching ? "Searching\u2026" : "Search"}
           </button>
         </div>
@@ -94,7 +94,7 @@ export default function SearchPage() {
       </form>
 
       {/* Conversational Q&A */}
-      <div className="mx-auto max-w-2xl mb-8">
+      <div className="mx-auto max-w-2xl w-full mb-6 sm:mb-8 px-1">
         <div className="rounded-xl border border-purple-200/60 bg-purple-50/30 p-4">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-purple-500 mb-3 flex items-center gap-1">
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -164,7 +164,7 @@ export default function SearchPage() {
       )}
 
       {searched && !searching && (
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8 w-full min-w-0 px-1">
           {experts.length > 0 && (
             <section>
               <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -207,7 +207,7 @@ export default function SearchPage() {
                 <p className="mt-1 text-xs text-gray-400">Try different keywords or a broader question</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">{results.map((r) => <RexCard key={r.id} rex={r} />)}</div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">{results.map((r) => <RexCard key={r.id} rex={r} />)}</div>
             )}
           </section>
         </div>

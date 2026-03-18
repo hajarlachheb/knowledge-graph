@@ -62,10 +62,10 @@ function FeedContent() {
   const totalPages = Math.ceil(total / 20);
 
   return (
-    <div className="max-w-[1100px]">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+    <div className="w-full min-w-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
             {tagFilter ? (<>REX Sheets <span className="text-brand-600">#{tagFilter}</span></>) : "REX Sheets"}
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">Browse experience entries across the company</p>
@@ -84,7 +84,7 @@ function FeedContent() {
       </form>
 
       {/* Filter bar */}
-      <div className="flex flex-wrap gap-2 mb-5">
+      <div className="flex flex-wrap gap-2 mb-4 sm:mb-5">
         <select
           value={deptFilter || ""}
           onChange={(e) => { setDeptFilter(e.target.value ? Number(e.target.value) : undefined); setPage(1); }}
@@ -123,7 +123,7 @@ function FeedContent() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
             {sheets.map((r) => <RexCard key={r.id} rex={r} onBookmarkChange={fetchData} />)}
           </div>
           {totalPages > 1 && (

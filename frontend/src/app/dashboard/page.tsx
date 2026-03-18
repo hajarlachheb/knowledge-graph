@@ -28,10 +28,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="max-w-[1100px]">
+    <div className="w-full min-w-0">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
           Welcome back, {user.full_name?.split(" ")[0] || user.username}
         </h1>
         <p className="text-sm text-gray-500 mt-0.5">
@@ -41,7 +41,7 @@ export default function DashboardPage() {
 
       {/* Stats row */}
       {data && (
-        <div className="grid grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
           {[
             { label: "My REX", value: data.stats.my_rex_count, color: "text-brand-600" },
             { label: "Saved", value: data.stats.my_bookmark_count, color: "text-yellow-600" },
@@ -55,22 +55,6 @@ export default function DashboardPage() {
           ))}
         </div>
       )}
-
-      {/* Quick actions */}
-      <div className="flex gap-2 mb-6">
-        <Link href="/learnings/new" className="flex items-center gap-2 rounded-lg bg-brand-600 text-white px-4 py-2 text-sm font-medium hover:bg-brand-700 transition-colors">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-          New REX
-        </Link>
-        <Link href="/search" className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-          <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" /></svg>
-          Ask Knowledia
-        </Link>
-        <Link href="/graph" className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-          <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
-          Graph
-        </Link>
-      </div>
 
       {data && (
         <div className="space-y-8">
@@ -86,7 +70,7 @@ export default function DashboardPage() {
                 <Link href="/learnings/new" className="mt-1 inline-block text-sm text-brand-600 hover:underline font-medium">Write your first one</Link>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
                 {data.my_rex_sheets.map((r) => <RexCard key={r.id} rex={r} />)}
               </div>
             )}
@@ -105,7 +89,7 @@ export default function DashboardPage() {
                 <p className="text-gray-400 text-sm">No REX sheets from your department yet</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
                 {data.department_feed.map((r) => <RexCard key={r.id} rex={r} />)}
               </div>
             )}
@@ -118,7 +102,7 @@ export default function DashboardPage() {
                 <svg className="h-4 w-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
                 Top Contributors
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
                 {leaders.slice(0, 6).map((c, i) => (
                   <Link key={c.id} href={`/users/${c.id}`}
                     className="rounded-xl border border-gray-200/80 bg-white p-3 hover:shadow-md transition-shadow text-center relative">
@@ -153,8 +137,8 @@ export default function DashboardPage() {
                 <svg className="h-4 w-4 text-purple-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" /></svg>
                 Recommended for you
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {data.recommended.slice(0, 4).map((r) => <RexCard key={r.id} rex={r} />)}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
+                {data.recommended.slice(0, 6).map((r) => <RexCard key={r.id} rex={r} />)}
               </div>
             </section>
           )}

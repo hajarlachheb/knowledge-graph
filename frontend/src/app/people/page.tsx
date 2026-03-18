@@ -30,9 +30,9 @@ function PeopleContent() {
   const activeDept = departments.find((d) => d.id === Number(deptFilter));
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">
+    <div className="w-full min-w-0">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
           {activeDept ? activeDept.name : "People"}
         </h1>
         <p className="mt-1 text-gray-500">

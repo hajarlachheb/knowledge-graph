@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
+import { useSidebar } from "@/lib/SidebarContext";
+import { useMediaQuery } from "@/lib/useMediaQuery";
 import { getUnreadCount, markAllNotificationsRead, getNotifications, NotificationOut } from "@/lib/api";
 import KnowlediaLogo from "@/components/KnowlediaLogo";
 
@@ -68,10 +70,13 @@ const NAV_SECTIONS = [
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, setCollapsed, mobileOpen, setMobileOpen } = useSidebar();
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifs, setShowNotifs] = useState(false);
   const [notifs, setNotifs] = useState<NotificationOut[]>([]);
+
+  const closeMobile = () => setMobileOpen(false);
 
   useEffect(() => {
     if (!user) return;
@@ -105,12 +110,26 @@ export default function Sidebar() {
 
   const isAdmin = user.is_admin;
 
-  return (
+  const sidebarContent = (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 flex flex-col bg-white border-r border-gray-200/80 transition-[width] duration-200 ease-out ${
-        collapsed ? "w-[68px]" : "w-60"
-      }`}
+      className={`fixed inset-y-0 left-0 z-40 flex flex-col bg-white border-r border-gray-200/80 transition-[width,transform] duration-200 ease-out ${
+        collapsed && isDesktop ? "w-[68px]" : "w-60"
+      } ${!isDesktop ? (mobileOpen ? "translate-x-0" : "-translate-x-full") : ""}`}
+      style={!isDesktop ? { width: 240 } : undefined}
     >
+      {/* Mobile: close button */}
+      {!isDesktop && mobileOpen && (
+        <button
+          type="button"
+          onClick={closeMobile}
+          className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100"
+          aria-label="Close menu"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
       {/* Logo + notifications */}
       <div className="relative flex h-14 items-center justify-between px-4 shrink-0">
         <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
@@ -161,9 +180,10 @@ export default function Sidebar() {
 
       {/* New REX CTA */}
       <div className={`px-3 mb-1 ${collapsed ? "px-2" : ""}`}>
-        <Link
-          href="/learnings/new"
-          className={`flex items-center justify-center gap-2 rounded-lg bg-brand-600 text-white text-[13px] font-medium hover:bg-brand-700 transition-colors ${
+<Link
+                href="/learnings/new"
+                onClick={closeMobile}
+                className={`flex items-center justify-center gap-2 rounded-lg bg-brand-600 text-white text-[13px] font-medium hover:bg-brand-700 transition-colors ${
             collapsed ? "h-9 w-full" : "px-3 py-2 w-full"
           }`}
         >
@@ -188,10 +208,11 @@ export default function Sidebar() {
                 const active = isActive(item.href);
                 return (
                   <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      title={collapsed ? item.label : undefined}
-                      className={`group flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] transition-all relative ${
+<Link
+                    href={item.href}
+                    onClick={closeMobile}
+                    title={collapsed ? item.label : undefined}
+                    className={`group flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] transition-all relative ${
                         active
                           ? "bg-brand-50/80 text-brand-700 font-medium"
                           : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -221,9 +242,10 @@ export default function Sidebar() {
             )}
             <ul className="space-y-0.5">
               <li>
-                <Link
-                  href="/admin"
-                  title={collapsed ? "Admin" : undefined}
+<Link
+                href="/admin"
+                onClick={closeMobile}
+                title={collapsed ? "Admin" : undefined}
                   className={`group flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] transition-all relative ${
                     isActive("/admin")
                       ? "bg-red-50/80 text-red-700 font-medium"
@@ -247,20 +269,24 @@ export default function Sidebar() {
         )}
       </nav>
 
-      {/* Collapse toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="mx-3 mb-2 flex items-center justify-center h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-      >
-        <svg className={`h-4 w-4 transition-transform ${collapsed ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-        </svg>
-      </button>
+      {/* Collapse toggle — desktop only */}
+      {isDesktop && (
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="mx-3 mb-2 flex items-center justify-center h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <svg className={`h-4 w-4 transition-transform ${collapsed ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+      )}
 
       {/* User */}
       <div className="border-t border-gray-100 p-3">
         <Link
           href={`/users/${user.id}`}
+          onClick={closeMobile}
           className={`flex items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-gray-50 transition-colors ${
             collapsed ? "justify-center" : ""
           }`}
@@ -292,5 +318,21 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {!isDesktop && mobileOpen && (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={closeMobile}
+          onKeyDown={(e) => e.key === "Enter" && closeMobile()}
+          className="fixed inset-0 z-30 bg-black/20"
+          aria-label="Close menu"
+        />
+      )}
+      {sidebarContent}
+    </>
   );
 }

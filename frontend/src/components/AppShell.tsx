@@ -2,15 +2,19 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
+import { SidebarProvider, useSidebar } from "@/lib/SidebarContext";
+import { useMediaQuery } from "@/lib/useMediaQuery";
 import Sidebar from "./Sidebar";
 import { useEffect } from "react";
 
 const PUBLIC_PATHS = ["/", "/login", "/register"];
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+function AppShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { user, loading } = useAuth();
+  const { collapsed, setMobileOpen } = useSidebar();
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const isPublicPage = PUBLIC_PATHS.includes(pathname);
 
@@ -38,10 +42,38 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   if (!user) return null;
 
+  const mainMarginLeft = isDesktop ? (collapsed ? 68 : 240) : 0;
+
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50/50">
       <Sidebar />
-      <main className="flex-1 ml-60 overflow-y-auto p-6">{children}</main>
+      {/* Mobile: hamburger to open sidebar */}
+      {!isDesktop && (
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="fixed top-4 left-4 z-30 flex h-10 w-10 items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 shadow-sm hover:bg-gray-50 md:hidden"
+          aria-label="Open menu"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+      )}
+      <main
+        className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pt-14 px-4 pb-4 sm:pt-6 sm:p-6 transition-[margin] duration-200"
+        style={{ marginLeft: mainMarginLeft }}
+      >
+        {children}
+      </main>
     </div>
+  );
+}
+
+export default function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
+      <AppShellInner>{children}</AppShellInner>
+    </SidebarProvider>
   );
 }

@@ -21,7 +21,7 @@ export default function EditRexPage() {
   if (!user || user.id !== rex.author.id) { router.push(`/learnings/${id}`); return null; }
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="w-full max-w-2xl min-w-0 mx-auto px-1 lg:max-w-3xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Edit REX Sheet</h1>
       <div className="rounded-xl border border-gray-200 bg-white p-6">
         <LearningForm

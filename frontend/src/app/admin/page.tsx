@@ -53,7 +53,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="max-w-4xl">
+    <div className="w-full min-w-0 overflow-x-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>

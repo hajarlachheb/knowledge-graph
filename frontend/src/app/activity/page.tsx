@@ -32,7 +32,7 @@ export default function ActivityPage() {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="w-full min-w-0">
       <h1 className="text-2xl font-bold text-gray-900 mb-1">Activity</h1>
       <p className="text-sm text-gray-500 mb-6">Recent events across the platform</p>
 

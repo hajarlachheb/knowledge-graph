@@ -86,16 +86,16 @@ export default function ProfilePage() {
   if (!profile) return <p className="text-center py-20 text-gray-500">User not found</p>;
 
   return (
-    <div>
-      <div className="rounded-xl border border-gray-200 bg-white p-6 mb-8">
-        <div className="flex items-start gap-4">
+    <div className="w-full min-w-0">
+      <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row items-start gap-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-100 text-2xl font-bold text-brand-700">
             {(profile.full_name || profile.username).charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 min-w-0">
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
                   {profile.full_name || profile.username}
                   {profile.is_trusted && (
                     <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Trusted</span>
@@ -197,7 +197,7 @@ export default function ProfilePage() {
       {sheets.length === 0 ? (
         <p className="text-gray-400 text-sm">No REX sheets published yet.</p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">{sheets.map((r) => <RexCard key={r.id} rex={r} onBookmarkChange={fetchData} />)}</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">{sheets.map((r) => <RexCard key={r.id} rex={r} onBookmarkChange={fetchData} />)}</div>
       )}
     </div>
   );
